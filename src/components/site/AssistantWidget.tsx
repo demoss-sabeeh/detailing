@@ -59,7 +59,7 @@ export function AssistantWidget() {
       setMode(r.mode);
       setMsgs((m) => [...m, { role: "assistant", content: r.reply, action: r.action }]);
     } catch {
-      setMsgs((m) => [...m, { role: "assistant", content: "Sorry — I couldn't reach the assistant. Please call (214) 555-0199 or request a quote." }]);
+      setMsgs((m) => [...m, { role: "assistant", content: "Sorry — I couldn't reach the assistant. Please try again or request a quote." }]);
     } finally {
       setBusy(false);
     }

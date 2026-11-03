@@ -111,7 +111,7 @@ function BookPage() {
     ["Starting price", money(cart.price)],
     ["Date", dateLabel],
     ["Time", f.time],
-    ["Location", done?.location ?? `DetailingOS Studio — ${BUSINESS.address}`],
+    ["Location", done?.location ?? "DetailingOS Studio — Dallas"],
   ];
 
   return (

@@ -48,7 +48,7 @@ export const FAQ = [
 
 export const POLICIES = [
   "Appointments are available Monday–Saturday during business hours.",
-  "Studio services (coating, correction, PPF) are performed at 2211 Commerce St, Dallas.",
+  "Studio services (coating, correction, PPF) are performed at our Dallas studio.",
   "Final pricing is confirmed after an in-person paint inspection.",
   "Please provide 24 hours' notice to reschedule or cancel.",
 ];
@@ -61,7 +61,7 @@ export function serviceBySlug(slug: string) {
 
 export function knowledgeAsText() {
   return [
-    `Business: ${BUSINESS.name}, ${BUSINESS.address}. Phone ${BUSINESS.phone}. Serves ${BUSINESS.serviceArea}.`,
+    `Business: ${BUSINESS.name}, ${BUSINESS.city}. Serves ${BUSINESS.serviceArea}. Contact by email: ${BUSINESS.email}.`,
     `Hours: ${BUSINESS.hours.map((h) => `${h.day} ${h.time}`).join("; ")}.`,
     "Services:",
     ...SERVICES.map((s) => `- ${s.name}: from $${s.priceFrom} (typical range $${s.priceFrom}–$${s.priceTo}), about ${s.durationHours} hours. ${s.description} Includes: ${s.includes.join(", ")}. Ideal for: ${s.ideal}`),
