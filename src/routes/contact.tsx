@@ -7,7 +7,7 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact DetailingOS — Dallas, TX" },
-      { name: "description", content: "Visit our Dallas studio at 2211 Commerce St, call (214) 555-0199, or request a quote online." },
+      { name: "description", content: "Email our Dallas studio, see our hours, or request a quote online." },
       { property: "og:title", content: "Contact — DetailingOS" },
       { property: "og:description", content: "Studio address, hours and ways to reach us." },
     ],
@@ -22,13 +22,13 @@ function Contact() {
       <section className="container-site grid gap-10 py-14 md:grid-cols-3">
         <div className="border-t pt-5">
           <p className="eyebrow text-slate">Studio</p>
-          <p className="mt-3 text-lg font-bold text-navy">{BUSINESS.address}</p>
+          <p className="mt-3 text-lg font-bold text-navy">{BUSINESS.city}</p>
           <p className="mt-1 text-slate">Serving {BUSINESS.serviceArea}.</p>
         </div>
         <div className="border-t pt-5">
           <p className="eyebrow text-slate">Reach us</p>
-          <p className="mt-3 text-lg font-bold text-navy"><a href={`tel:${BUSINESS.phone}`}>{BUSINESS.phone}</a></p>
-          <p className="mt-1 text-slate">{BUSINESS.email}</p>
+          <p className="mt-3 text-lg font-bold text-navy"><a href={`mailto:${BUSINESS.email}`} className="hover:text-navy">{BUSINESS.email}</a></p>
+          <p className="mt-1 text-slate">We reply within one business day.</p>
         </div>
         <div className="border-t pt-5">
           <p className="eyebrow text-slate">Hours</p>

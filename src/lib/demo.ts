@@ -86,7 +86,7 @@ export async function runDemoStep(key: string, ctx: Ctx): Promise<Ctx> {
       await ins("appointments", { customer_id: ctx.customerId, vehicle_id: ctx.vehicleId, service_id: ctx.serviceId, lead_id: ctx.leadId, starts_at: startsAt, duration_hours: 6, status: "confirmed" });
       await supabase.from("leads").update({ status: "booked" }).eq("id", ctx.leadId!);
       await act(ctx, "booked", "Appointment booked", "Ceramic Coating · Friday 10:00 AM");
-      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "sms", direction: "outbound", automated: true, body: "You're confirmed for Friday at 10:00 AM at 2211 Commerce St. See you then!" });
+      await ins("messages", { customer_id: ctx.customerId, lead_id: ctx.leadId, channel: "sms", direction: "outbound", automated: true, body: "You're confirmed for Friday at 10:00 AM at our Dallas studio. See you then!" });
       return { ...ctx, startsAt };
     }
     case "reminder": {

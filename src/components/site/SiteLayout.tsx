@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
-import { Menu, Phone, MapPin } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
@@ -21,12 +21,6 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <div className="bg-navy text-navy-foreground">
-        <div className="container-site flex h-8 items-center justify-between text-[11px] tracking-wide">
-          <span className="flex items-center gap-1.5 text-navy-muted"><MapPin className="h-3 w-3" /> {BUSINESS.address}</span>
-          <a href={`tel:${BUSINESS.phone}`} className="hidden items-center gap-1.5 sm:flex"><Phone className="h-3 w-3" /> {BUSINESS.phone}</a>
-        </div>
-      </div>
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container-site flex h-16 items-center justify-between gap-6">
           <Link to="/" className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl" aria-label="DetailingOS home">DetailingOS</Link>
@@ -88,10 +82,8 @@ export function SiteLayout({ children }: { children: ReactNode }) {
             </ul>
           </div>
           <div className="lg:col-span-3">
-            <p className="eyebrow text-navy-muted">Visit</p>
+            <p className="eyebrow text-navy-muted">Contact</p>
             <address className="mt-4 space-y-1 text-sm not-italic text-navy-foreground/85">
-              <p>{BUSINESS.address}</p>
-              <p><a href={`tel:${BUSINESS.phone}`} className="hover:text-navy-foreground">{BUSINESS.phone}</a></p>
               <p className="break-all"><a href={`mailto:${BUSINESS.email}`} className="hover:text-navy-foreground">{BUSINESS.email}</a></p>
               <div className="pt-3">{BUSINESS.hours.map((h) => <p key={h.day} className="text-navy-muted">{h.day}: {h.time}</p>)}</div>
             </address>

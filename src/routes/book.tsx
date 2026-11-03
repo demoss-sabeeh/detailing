@@ -10,7 +10,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Field, OptionCard, StepPanel, Stepper, Summary, inputCls } from "@/components/site/Wizard";
-import { SERVICES, ADDONS, serviceBySlug, bookingCart, BUSINESS } from "@/lib/knowledge";
+import { SERVICES, ADDONS, serviceBySlug, bookingCart } from "@/lib/knowledge";
 import { money, TZ } from "@/lib/format";
 import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
@@ -111,7 +111,7 @@ function BookPage() {
     ["Starting price", money(cart.price)],
     ["Date", dateLabel],
     ["Time", f.time],
-    ["Location", done?.location ?? `DetailingOS Studio — ${BUSINESS.address}`],
+    ["Location", done?.location ?? "DetailingOS Studio — Dallas"],
   ];
 
   return (

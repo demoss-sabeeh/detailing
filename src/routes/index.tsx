@@ -27,8 +27,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "AutoWash",
           name: BUSINESS.name,
-          telephone: BUSINESS.phone,
-          address: { "@type": "PostalAddress", streetAddress: "2211 Commerce St", addressLocality: "Dallas", addressRegion: "TX", postalCode: "75201", addressCountry: "US" },
+          email: BUSINESS.email,
           openingHours: ["Mo-Fr 08:00-18:00", "Sa 09:00-16:00"],
         }),
       },
@@ -48,7 +47,7 @@ const HOME_FAQ = [
   { q: "How do I request a quote?", a: "Use the Get a Quote form. Tell us about your vehicle, its condition and the services you're interested in, and you'll receive an itemized quote." },
   { q: "How can I book an appointment?", a: "Choose Book an Appointment, pick your services and add-ons, then select an available date and time. You'll receive a confirmation once it's scheduled." },
   { q: "How should I prepare my vehicle?", a: "Remove personal items from the cabin and trunk. There's no need to wash the vehicle beforehand." },
-  { q: "How can I contact the studio?", a: `Call ${BUSINESS.phone}, email ${BUSINESS.email}, or visit us at ${BUSINESS.address}.` },
+  { q: "How can I contact the studio?", a: `Email ${BUSINESS.email} or send a quote request — we reply with an itemized recommendation.` },
 ];
 
 // Demo placeholders — replace with real customer reviews before going live.
