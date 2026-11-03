@@ -28,7 +28,7 @@ function Contact() {
         <div className="border-t pt-5">
           <p className="eyebrow text-slate">Reach us</p>
           <p className="mt-3 text-lg font-bold text-navy"><a href={`mailto:${BUSINESS.email}`} className="hover:text-navy">{BUSINESS.email}</a></p>
-          <p className="mt-1 text-slate">{BUSINESS.email}</p>
+          <p className="mt-1 text-slate">We reply within one business day.</p>
         </div>
         <div className="border-t pt-5">
           <p className="eyebrow text-slate">Hours</p>
