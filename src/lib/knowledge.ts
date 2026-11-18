@@ -88,8 +88,8 @@ export const ADDONS: AddonInfo[] = [
 export const addonBySlug = (slug: string) => ADDONS.find((a) => a.slug === slug);
 
 /** Combined price and duration for a set of services and add-ons. */
-export function bookingCart(serviceSlugs: string[], addonSlugs: string[]) {
-  const services = serviceSlugs.map((s) => serviceBySlug(s)).filter((s): s is ServiceInfo => !!s);
+export function bookingCart(serviceSlugs: string[], addonSlugs: string[], catalog: ServiceInfo[] = SERVICES) {
+  const services = [...new Set(serviceSlugs)].map((s) => catalog.find((item) => item.slug === s)).filter((s): s is ServiceInfo => !!s);
   const addons = addonSlugs.map((s) => addonBySlug(s)).filter((a): a is AddonInfo => !!a);
   const price = services.reduce((t, s) => t + s.priceFrom, 0) + addons.reduce((t, a) => t + a.price, 0);
   const durationHours = services.reduce((t, s) => t + s.durationHours, 0) + addons.reduce((t, a) => t + a.durationHours, 0);

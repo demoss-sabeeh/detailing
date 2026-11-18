@@ -11,8 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { RowDelete } from "@/components/admin/delete";
 import { deleteService } from "@/lib/actions";
 import { money } from "@/lib/format";
+import { ADDONS } from "@/lib/knowledge";
+import { adminHead } from "@/lib/workspace";
+import { ErrorState, EmptyState, Panel } from "@/components/admin/ui";
 
-export const Route = createFileRoute("/_authenticated/admin/services")({ component: Services });
+export const Route = createFileRoute("/_authenticated/admin/services")({ head: () => adminHead("Services & Pricing"), component: Services });
 
 type Draft = { id?: string; name: string; short_description: string; price_from: number; duration_hours: number };
 
@@ -20,13 +23,16 @@ function Services() {
   const s = useServices();
   const invalidate = useInvalidate();
   const [d, setD] = useState<Draft | null>(null);
+  const [busy,setBusy] = useState(false);
 
   async function save() {
     if (!d || !d.name.trim()) return;
+    setBusy(true);
     const row = { name: d.name.trim(), short_description: d.short_description, price_from: d.price_from, duration_hours: d.duration_hours };
     const { error } = d.id
       ? await supabase.from("services").update(row).eq("id", d.id)
       : await supabase.from("services").insert({ ...row, slug: d.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + "-" + (Date.now() % 1000), sort: (s.data?.length ?? 0) + 1 });
+    setBusy(false);
     if (error) return toast.error(error.message);
     toast.success(d.id ? "Service updated" : "Service created");
     setD(null);
@@ -41,9 +47,9 @@ function Services() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Services" subtitle="Your service menu, pricing and durations." actions={<Button size="sm" onClick={() => setD({ name: "", short_description: "", price_from: 0, duration_hours: 2 })}><Plus /> New service</Button>} />
+      <PageTitle title="Services & Pricing" subtitle="Your service menu, pricing and durations." actions={<Button onClick={() => setD({ name: "", short_description: "", price_from: 0, duration_hours: 2 })}><Plus /> New service</Button>} />
       <div className="overflow-hidden rounded-md border bg-surface">
-        {s.isLoading ? <div className="p-4"><RowsSkeleton /></div> : (
+        {s.isLoading ? <div className="p-4"><RowsSkeleton /></div> : s.isError ? <ErrorState error={s.error} retry={() => s.refetch()} /> : !s.data?.length ? <EmptyState title="No services yet" /> : (
           <ul className="divide-y">
             {s.data?.map((x) => (
               <li key={x.id} className={`grid min-w-0 grid-cols-2 items-center gap-2 px-4 py-3 md:grid-cols-[repeat(11,minmax(0,1fr))_auto_auto] ${x.active ? "" : "opacity-55"}`}>
@@ -58,6 +64,7 @@ function Services() {
           </ul>
         )}
       </div>
+      <Panel title="Optional extras"><p className="mb-3 text-xs text-slate">These demo extras are fixed; editable extras and separate mobile pricing are not supported yet.</p><div className="grid gap-x-6 sm:grid-cols-2">{ADDONS.map((a) => <div key={a.slug} className="flex justify-between gap-3 border-b py-3 text-sm"><span>{a.name}<span className="block text-xs text-slate">{a.durationHours} hours</span></span><span className="tabular font-medium">{money(a.price)}</span></div>)}</div></Panel>
       <Dialog open={!!d} onOpenChange={(o) => !o && setD(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle className="text-navy">{d?.id ? "Edit service" : "New service"}</DialogTitle></DialogHeader>
@@ -71,7 +78,7 @@ function Services() {
               </div>
             </div>
           )}
-          <DialogFooter><Button onClick={save} disabled={!d?.name.trim()}>Save</Button></DialogFooter>
+          <DialogFooter><Button onClick={save} disabled={busy || !d?.name.trim()}>{busy ? "Saving…" : "Save"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

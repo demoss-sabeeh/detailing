@@ -8,6 +8,7 @@ import { bookAppointment, createFollowUp, createQuote, sendMessage, updateQuote 
 import { useInvalidate, useServices, type Quote } from "@/lib/admin-data";
 import { FU_TYPES, localToIso, money } from "@/lib/format";
 import { TIME_SLOTS } from "@/lib/knowledge";
+import { BookingWizard } from "./BookingWizard";
 
 type Ctx = { lead_id?: string | null; customer_id: string; vehicle_id?: string | null; service_id?: string | null; customerName?: string; estimated_value?: number };
 
@@ -50,28 +51,7 @@ function Shell({ open, onOpenChange, title, desc, children, footer }: { open: bo
 const L = ({ children, htmlFor }: { children: ReactNode; htmlFor: string }) => <label htmlFor={htmlFor} className="mb-1 block text-[11px] font-bold uppercase tracking-[0.1em] text-slate">{children}</label>;
 
 export function BookDialog({ open, onOpenChange, ctx }: { open: boolean; onOpenChange: (o: boolean) => void; ctx: Ctx }) {
-  const services = useServices();
-  const [serviceId, setServiceId] = useState(ctx.service_id ?? "");
-  const [date, setDate] = useState(() => new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10));
-  const [time, setTime] = useState(TIME_SLOTS[1]);
-  const { busy, run } = useRun(() => onOpenChange(false));
-  const svc = services.data?.find((s) => s.id === (serviceId || ctx.service_id));
-  return (
-    <Shell open={open} onOpenChange={onOpenChange} title="Book appointment" desc={ctx.customerName}
-      footer={<Button disabled={busy || !svc} onClick={() => run(() => bookAppointment({ ...ctx, service_id: svc!.id, starts_at: localToIso(date, time), duration_hours: Number(svc!.duration_hours), serviceName: svc!.name }), "Appointment booked")}>{busy && <Loader2 className="animate-spin" />}Confirm booking</Button>}>
-      <div><L htmlFor="b-svc">Service</L>
-        <select id="b-svc" className={`${selectCls} w-full`} value={serviceId || ctx.service_id || ""} onChange={(e) => setServiceId(e.target.value)}>
-          <option value="" disabled>Select…</option>
-          {services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div><L htmlFor="b-date">Date</L><input id="b-date" type="date" className={inputSm} value={date} onChange={(e) => setDate(e.target.value)} /></div>
-        <div><L htmlFor="b-time">Time</L><select id="b-time" className={`${selectCls} w-full`} value={time} onChange={(e) => setTime(e.target.value)}>{TIME_SLOTS.map((t) => <option key={t}>{t}</option>)}</select></div>
-      </div>
-      <p className="text-xs text-slate">Confirmation SMS and a 24-hour reminder are created automatically.</p>
-    </Shell>
-  );
+  return open ? <BookingWizard onClose={() => onOpenChange(false)} customerId={ctx.customer_id} vehicleId={ctx.vehicle_id ?? ""} leadId={ctx.lead_id} serviceId={ctx.service_id ?? ""} /> : null;
 }
 
 type Item = { description: string; quantity: number; unit_price: number };
@@ -91,7 +71,8 @@ export function QuoteDialog({ open, onOpenChange, ctx, quote }: { open: boolean;
   function save(status: string) {
     const clean = list.filter((i) => i.description.trim());
     if (quote) return run(() => updateQuote(quote.id, { discount, notes, status }, clean), "Quote updated");
-    return run(() => createQuote({ ...ctx!, service_id: ctx!.service_id ?? svcDefault?.id, items: clean, discount, notes, status }), status === "sent" ? "Quote created and sent" : "Draft saved");
+    if (!ctx) return;
+    return run(() => createQuote({ ...ctx, service_id: ctx.service_id ?? svcDefault?.id, items: clean, discount, notes, status }), status === "sent" ? "Quote created and sent" : "Draft saved");
   }
 
   return (

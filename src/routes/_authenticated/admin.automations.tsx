@@ -10,8 +10,9 @@ import { useAutomationRuns, useAutomations, useInvalidate, type Automation } fro
 import { supabase } from "@/integrations/supabase/client";
 import { fullName, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { adminHead } from "@/lib/workspace";
 
-export const Route = createFileRoute("/_authenticated/admin/automations")({ component: Automations });
+export const Route = createFileRoute("/_authenticated/admin/automations")({ head: () => adminHead("Notification rules"), component: Automations });
 
 function Node({ kind, text, i }: { kind: "trigger" | "condition" | "delay" | "action"; text: string; i: number }) {
   const meta = { trigger: [Zap, "Trigger", "border-primary bg-accent"], condition: [Filter, "Condition", "border-warning/40 bg-warning-soft"], delay: [Clock, "Wait", "border-mist bg-muted"], action: [Play, "Action", "border-border bg-surface"] }[kind] as [typeof Zap, string, string];

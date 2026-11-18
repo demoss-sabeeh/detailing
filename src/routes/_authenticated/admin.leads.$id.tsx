@@ -10,8 +10,10 @@ import { useInvalidate, useLead } from "@/lib/admin-data";
 import { setLeadStatus, setAppointmentStatus, deleteLead } from "@/lib/actions";
 import { fmtDate, fmtDateTime, fmtTime, fullName, label, LEAD_STATUSES, money, vehicleName, type LeadStatus } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { adminHead } from "@/lib/workspace";
+import { Reminders } from "@/components/admin/Reminders";
 
-export const Route = createFileRoute("/_authenticated/admin/leads/$id")({ component: LeadWorkspace });
+export const Route = createFileRoute("/_authenticated/admin/leads/$id")({ head: () => adminHead("Inquiry details"), component: LeadWorkspace });
 
 function LeadWorkspace() {
   const { id } = Route.useParams();
@@ -61,7 +63,7 @@ function LeadWorkspace() {
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => status("qualified")} disabled={stageIdx >= 2 && lead.status !== "lost"}><BadgeCheck /> Qualify</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("quote")}><FilePlus2 /> Create quote</Button>
-          <Button size="sm" onClick={() => setDlg("book")}><CalendarPlus /> Book appointment</Button>
+          <Button size="sm" onClick={() => setDlg("book")}><CalendarPlus /> Convert to booking</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("msg")}><MessageSquarePlus /> Send message</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("fu")}><BellPlus /> Follow-up</Button>
           <Button size="sm" variant="navy" onClick={complete} disabled={lead.status === "completed"}><CheckCheck /> Mark completed</Button>
@@ -69,19 +71,9 @@ function LeadWorkspace() {
         </div>
       </div>
 
-      <ol className="grid grid-cols-7 gap-1" aria-label="Lead stage">
-        {LEAD_STATUSES.map((s, i) => (
-          <li key={s}>
-            <button onClick={() => status(s)} className="w-full text-left" aria-current={lead.status === s}>
-              <div className={cn("h-1 rounded-full", lead.status === "lost" ? (s === "lost" ? "bg-destructive" : "bg-border") : i <= stageIdx && s !== "lost" ? "bg-primary" : "bg-border")} />
-              <span className={cn("mt-1.5 block truncate text-[10px] font-bold uppercase tracking-wider", lead.status === s ? "text-navy" : "text-slate")}>{label(s)}</span>
-            </button>
-          </li>
-        ))}
-      </ol>
-
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4">
+          <Panel title="Follow-up reminders"><Reminders customerId={lead.customer_id} leadId={lead.id} /></Panel>
           <Panel title="Customer">
             <dl className="space-y-2 text-sm">
               {[["Name", <Link key="n" to="/admin/customers/$id" params={{ id: lead.customer_id }} className="font-semibold text-primary">{name}</Link>], ["Email", lead.customer?.email], ["Phone", lead.customer?.phone], ["Source", label(lead.source)], ["Created", fmtDateTime(lead.created_at)]].map(([k, v]) => (

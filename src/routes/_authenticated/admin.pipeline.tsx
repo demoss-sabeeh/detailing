@@ -9,8 +9,9 @@ import { RowDelete } from "@/components/admin/delete";
 import { setLeadStatus, deleteLead } from "@/lib/actions";
 import { fullName, label, LEAD_STATUSES, money, timeAgo, vehicleName, type LeadStatus } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { adminHead } from "@/lib/workspace";
 
-export const Route = createFileRoute("/_authenticated/admin/pipeline")({ component: Pipeline });
+export const Route = createFileRoute("/_authenticated/admin/pipeline")({ head: () => adminHead("Legacy pipeline"), component: Pipeline });
 
 function Pipeline() {
   const leads = useLeads();

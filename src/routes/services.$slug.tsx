@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { SERVICES, serviceBySlug } from "@/lib/knowledge";
 import { money } from "@/lib/format";
 import { GALLERY } from "@/lib/gallery";
+import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
 
 const IMG: Record<string, number> = { "full-detail": 4, "ceramic-coating": 0, "paint-correction": 2, "paint-protection-film": 5, "interior-detail": 7, "maintenance-detail": 3, "fleet-detailing": 1 };
 
 export const Route = createFileRoute("/services/$slug")({
-  loader: ({ params }) => {
-    const s = serviceBySlug(params.slug);
+  loader: async ({ params, context }) => {
+    const catalog = await context.queryClient.ensureQueryData(serviceCatalogOptions);
+    const s = catalog.find((s) => s.slug === params.slug);
     if (!s) throw notFound();
     return { service: s };
   },
@@ -23,6 +25,10 @@ export const Route = createFileRoute("/services/$slug")({
         { name: "description", content: `${s.short} Starting at ${money(s.priceFrom)}.` },
         { property: "og:title", content: `${s.name} — DetailingOS` },
         { property: "og:description", content: s.short },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { property: "og:image", content: GALLERY[IMG[s.slug] ?? 0].src },
+        { name: "twitter:image", content: GALLERY[IMG[s.slug] ?? 0].src },
       ],
     };
   },
@@ -35,7 +41,7 @@ export const Route = createFileRoute("/services/$slug")({
 function ServiceDetail() {
   const { service: s } = Route.useLoaderData();
   const img = GALLERY[IMG[s.slug] ?? 0];
-  const others = SERVICES.filter((o) => o.slug !== s.slug).slice(0, 3);
+  const others = useServiceCatalog().filter((o) => o.slug !== s.slug).slice(0, 3);
   return (
     <SiteLayout>
       <section className="border-b">

@@ -10,6 +10,8 @@ export const Route = createFileRoute("/about")({
       { name: "description", content: "A climate-controlled Dallas studio focused on paint correction, ceramic coating and paint protection film." },
       { property: "og:title", content: "About — DetailingOS" },
       { property: "og:description", content: "Our approach to premium detailing in Dallas." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: About,

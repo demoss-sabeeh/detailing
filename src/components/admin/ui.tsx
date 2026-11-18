@@ -20,18 +20,18 @@ const DOT: Record<Tone, string> = { neutral: "bg-slate", info: "bg-sky", primary
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
   const tone = statusTone[status] ?? "neutral";
   return (
-    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]", TONES[tone], className)}>
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border px-2 py-1 text-[11px] font-medium", TONES[tone], className)}>
       <span className={cn("h-1.5 w-1.5 rounded-full", DOT[tone])} aria-hidden />
-      {label(status)}
+      {status === "requested" ? "Pending" : status === "qualified" ? "Interested" : status === "quoted" ? "Quote sent" : status === "booked" ? "Converted" : label(status)}
     </span>
   );
 }
 
 export function PageTitle({ title, subtitle, actions }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-4 pb-2 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="text-2xl font-extrabold tracking-tight text-navy md:text-[28px]">{title}</h1>
+        <h1 className="text-2xl font-bold text-navy md:text-[28px]">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-slate">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -41,26 +41,26 @@ export function PageTitle({ title, subtitle, actions }: { title: ReactNode; subt
 
 export function Panel({ title, action, children, className, bodyClass }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string; bodyClass?: string }) {
   return (
-    <section className={cn("rounded-md border bg-surface", className)}>
+    <section className={cn("min-w-0", className)}>
       {title && (
-        <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
-          <h2 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate">{title}</h2>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b py-3">
+          <h2 className="text-sm font-semibold text-navy">{title}</h2>
           {action}
         </header>
       )}
-      <div className={cn("p-4", bodyClass)}>{children}</div>
+      <div className={cn("py-4", bodyClass)}>{children}</div>
     </section>
   );
 }
 
 export function Kpi({ label, value, hint, icon: Icon }: { label: string; value: ReactNode; hint?: string; icon: LucideIcon }) {
   return (
-    <div className="rounded-md border bg-surface p-4">
+    <div className="min-w-0 rounded-lg border bg-surface p-5">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate">{label}</p>
-        <Icon className="h-4 w-4 text-primary" aria-hidden />
+        <p className="text-xs font-medium text-slate">{label}</p>
+        <Icon className="h-4 w-4 text-slate" aria-hidden />
       </div>
-      <p className="tabular mt-3 text-3xl font-extrabold text-navy">{value}</p>
+      <p className="tabular mt-3 text-3xl font-bold text-navy">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate">{hint}</p>}
     </div>
   );

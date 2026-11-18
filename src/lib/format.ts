@@ -1,3 +1,4 @@
+import { businessLocalToIso } from "./booking-validation";
 export const TZ = "America/Chicago";
 
 export const money = (n: number | null | undefined) =>
@@ -30,15 +31,7 @@ export function dayKey(d: string | Date) {
 
 /** Build an ISO timestamp from a business-local date + "10:00 AM" style label. */
 export function localToIso(date: string, label: string) {
-  const m = label.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  let h = m ? parseInt(m[1]) % 12 : 9;
-  if (m && m[3].toUpperCase() === "PM") h += 12;
-  const min = m ? parseInt(m[2]) : 0;
-  // Find the UTC offset for America/Chicago on that date.
-  const guess = new Date(`${date}T${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00Z`);
-  const local = new Date(guess.toLocaleString("en-US", { timeZone: TZ }));
-  const offset = guess.getTime() - local.getTime();
-  return new Date(guess.getTime() + offset).toISOString();
+  return businessLocalToIso(date,label);
 }
 
 export const LEAD_STATUSES = ["new", "contacted", "qualified", "quoted", "booked", "completed", "lost"] as const;

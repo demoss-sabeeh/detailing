@@ -3,20 +3,25 @@ import { ArrowRight } from "lucide-react";
 import { SiteLayout, PageHeader } from "@/components/site/SiteLayout";
 import { SERVICES } from "@/lib/knowledge";
 import { money } from "@/lib/format";
+import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
 
 export const Route = createFileRoute("/services/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   head: () => ({
     meta: [
       { title: "Detailing Services & Pricing — DetailingOS Dallas" },
       { name: "description", content: "Full detail, ceramic coating, paint correction, PPF, interior and fleet detailing in Dallas, with starting prices." },
       { property: "og:title", content: "Detailing Services — DetailingOS" },
       { property: "og:description", content: "Ceramic coating, paint correction, PPF and more in Dallas, TX." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ServicesPage,
 });
 
 function ServicesPage() {
+  const catalog = useServiceCatalog();
   return (
     <SiteLayout>
       <PageHeader eyebrow="Services" title="Every finish, handled precisely.">
@@ -24,7 +29,7 @@ function ServicesPage() {
       </PageHeader>
       <section className="container-site py-12">
         <ul className="divide-y border-y">
-          {SERVICES.map((s) => (
+          {catalog.map((s) => (
             <li key={s.slug}>
               <Link to="/services/$slug" params={{ slug: s.slug }} className="group grid items-center gap-4 py-7 md:grid-cols-12">
                 <h2 className="font-display text-3xl text-navy md:col-span-4">{s.name}</h2>

@@ -1,81 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { PageTitle, Panel, RowsSkeleton } from "@/components/admin/ui";
-import { useAppointments, useFollowUps, useLeads, useQuotes } from "@/lib/admin-data";
-import { dayKey, fmtDate, label, LEAD_SOURCES, LEAD_STATUSES, QUOTE_STATUSES } from "@/lib/format";
-
-export const Route = createFileRoute("/_authenticated/admin/analytics")({ component: Analytics });
-
-const C = ["var(--color-chart-1)", "var(--color-chart-2)", "var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
-
-function Bars({ data, color = C[0], height = 200 }: { data: { name: string; value: number }[]; color?: string; height?: number }) {
-  return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
-        <CartesianGrid vertical={false} stroke="var(--color-border)" />
-        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--color-slate)" }} tickLine={false} axisLine={false} interval={0} />
-        <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "var(--color-slate)" }} tickLine={false} axisLine={false} />
-        <Tooltip cursor={{ fill: "var(--color-secondary)" }} contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid var(--color-border)" }} />
-        <Bar dataKey="value" radius={[3, 3, 0, 0]} fill={color} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
-function HBar({ rows }: { rows: { name: string; value: number }[] }) {
-  const max = Math.max(1, ...rows.map((r) => r.value));
-  return (
-    <ul className="space-y-2.5">
-      {rows.map((r, i) => (
-        <li key={r.name}>
-          <div className="flex justify-between text-xs"><span className="font-semibold text-navy">{r.name}</span><span className="tabular text-slate">{r.value}</span></div>
-          <div className="mt-1 h-1.5 rounded-full bg-secondary"><div className="h-full rounded-full" style={{ width: `${(r.value / max) * 100}%`, background: C[i % 3] }} /></div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
+import { useState } from "react";
+import { Download, CalendarCheck, CheckCheck, Users, DollarSign } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Button } from "@/components/ui/button";
+import { PageTitle, Panel, Kpi, RowsSkeleton, ErrorState, EmptyState, inputSm } from "@/components/admin/ui";
+import { useAppointments, useCustomers, useLeads } from "@/lib/admin-data";
+import { dayKey, fullName, money } from "@/lib/format";
+import { adminHead, bookingAmount, exportCsv, serviceMode } from "@/lib/workspace";
+export const Route = createFileRoute("/_authenticated/admin/analytics")({ head: () => adminHead("Reports"), component: Analytics });
 function Analytics() {
-  const leads = useLeads();
-  const quotes = useQuotes();
-  const appts = useAppointments();
-  const fus = useFollowUps();
-  if (leads.isLoading || appts.isLoading) return <RowsSkeleton rows={8} />;
-  const L = leads.data ?? [];
-  const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 86400000));
-  const volume = days.map((d) => ({ name: fmtDate(d, { month: "numeric", day: "numeric" }), value: L.filter((l) => dayKey(l.created_at) === dayKey(d)).length }));
-  const pipeline = LEAD_STATUSES.map((s) => ({ name: label(s), value: L.filter((l) => l.status === s).length }));
-  const quoteStatus = QUOTE_STATUSES.map((s) => ({ name: label(s), value: (quotes.data ?? []).filter((q) => q.status === s).length }));
-  const sources = LEAD_SOURCES.map((s) => ({ name: label(s), value: L.filter((l) => l.source === s).length })).sort((a, b) => b.value - a.value);
-  const demand = Object.entries(L.reduce<Record<string, number>>((a, l) => ((a[l.service?.name ?? "Other"] = (a[l.service?.name ?? "Other"] ?? 0) + 1), a), {})).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
-  const apptDays = Array.from({ length: 21 }, (_, i) => new Date(Date.now() + (i - 10) * 86400000));
-  const apptTrend = apptDays.map((d) => ({ name: fmtDate(d, { month: "numeric", day: "numeric" }), value: (appts.data ?? []).filter((a) => dayKey(a.starts_at) === dayKey(d) && a.status !== "cancelled").length }));
-  const fuStatus = ["pending", "scheduled", "completed", "cancelled"].map((s) => ({ name: label(s), value: (fus.data ?? []).filter((f) => f.status === s).length }));
-
-  return (
-    <div className="space-y-5">
-      <PageTitle title="Analytics" subtitle="Calculated live from the records in this workspace. No projected revenue or ROI is shown." />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Lead volume · last 14 days"><Bars data={volume} /></Panel>
-        <Panel title="Pipeline distribution"><Bars data={pipeline} color={C[2]} /></Panel>
-        <Panel title="Booking volume · ±10 days"><Bars data={apptTrend} color={C[1]} /></Panel>
-        <Panel title="Quote status">
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={quoteStatus} layout="vertical" margin={{ left: 10, right: 10 }}>
-              <XAxis type="number" hide allowDecimals={false} />
-              <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11, fill: "var(--color-slate)" }} tickLine={false} axisLine={false} />
-              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6 }} />
-              <Bar dataKey="value" radius={[0, 3, 3, 0]}>{quoteStatus.map((_, i) => <Cell key={i} fill={C[i % 5]} />)}</Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </Panel>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
-        <Panel title="Lead sources"><HBar rows={sources} /></Panel>
-        <Panel title="Service demand"><HBar rows={demand} /></Panel>
-        <Panel title="Follow-up activity"><HBar rows={fuStatus} /></Panel>
-      </div>
-    </div>
-  );
+  const appts=useAppointments(); const customers=useCustomers(); const leads=useLeads(); const [from,setFrom]=useState(""); const [to,setTo]=useState("");
+  const inRange=(date:string) => (!from || dayKey(date)>=from) && (!to || dayKey(date)<=to);
+  const rows=(appts.data ?? []).filter((a) => inRange(a.starts_at)); const active=rows.filter((a) => !["cancelled","no_show"].includes(a.status));
+  const value=active.reduce((sum,a) => sum+bookingAmount(a,leads.data),0);
+  const demand=Object.entries(rows.reduce<Record<string,number>>((acc,a) => {const name=a.service?.name ?? "Unspecified"; acc[name]=(acc[name] ?? 0)+1; return acc;},{})).map(([name,bookings]) => ({name,bookings})).sort((a,b) => b.bookings-a.bookings);
+  const volume=Object.entries(rows.reduce<Record<string,number>>((acc,a) => {const month=dayKey(a.starts_at).slice(0,7);acc[month]=(acc[month] ?? 0)+1;return acc;},{})).map(([month,bookings]) => ({month,bookings})).sort((a,b) => a.month.localeCompare(b.month));
+  if(appts.isLoading || customers.isLoading || leads.isLoading) return <RowsSkeleton />;
+  if(appts.isError || customers.isError || leads.isError) return <ErrorState error={appts.error ?? customers.error ?? leads.error} retry={() => {appts.refetch();customers.refetch();leads.refetch();}} />;
+  return <div className="space-y-6"><PageTitle title="Reports" subtitle="Bookings, customers and service performance." actions={<Button variant="outline" disabled={!rows.length} onClick={() => exportCsv("booking-report.csv",["Booking","Customer","Date","Service","Visit type","Status","Booking value"],rows.map((a) => [a.id,fullName(a.customer),a.starts_at,a.service?.name,serviceMode(a),a.status,bookingAmount(a,leads.data)]))}><Download /> Export report</Button>} /><div className="flex flex-wrap gap-3"><label className="text-xs text-slate">From<input type="date" aria-label="Report from" className={`${inputSm} mt-1`} value={from} onChange={(e) => setFrom(e.target.value)} /></label><label className="text-xs text-slate">To<input type="date" aria-label="Report to" min={from} className={`${inputSm} mt-1`} value={to} onChange={(e) => setTo(e.target.value)} /></label>{(from || to) && <Button variant="ghost" className="self-end" onClick={() => {setFrom("");setTo("");}}>Clear dates</Button>}</div><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi icon={CalendarCheck} label="Bookings" value={rows.length} hint={`${rows.filter((a) => a.status === "cancelled").length} cancelled`} /><Kpi icon={CheckCheck} label="Completed services" value={rows.filter((a) => a.status === "completed").length} /><Kpi icon={Users} label="New customers" value={(customers.data ?? []).filter((c) => inRange(c.created_at)).length} /><Kpi icon={DollarSign} label="Average booking value" value={money(active.length ? value/active.length : 0)} hint="Not received revenue" /></div>
+    <div className="grid gap-8 lg:grid-cols-2"><Panel title="Booking volume">{volume.length ? <ResponsiveContainer width="100%" height={260}><BarChart data={volume} margin={{left:-20}}><CartesianGrid vertical={false} stroke="var(--border)" /><XAxis dataKey="month" tick={{fontSize:11,fill:"var(--slate)"}} axisLine={false} tickLine={false} /><YAxis allowDecimals={false} tick={{fontSize:11,fill:"var(--slate)"}} axisLine={false} tickLine={false} /><Tooltip /><Bar dataKey="bookings" fill="var(--primary)" radius={[4,4,0,0]} maxBarSize={40} /></BarChart></ResponsiveContainer> : <EmptyState title="No bookings in this period" />}</Panel><Panel title="Most popular services"><ul className="divide-y">{demand.map((s) => <li key={s.name} className="flex justify-between gap-3 py-3 text-sm"><span>{s.name}</span><span className="tabular font-semibold">{s.bookings}</span></li>)}</ul>{!demand.length && <EmptyState title="No service bookings" />}</Panel></div><div className="grid gap-8 lg:grid-cols-2"><Panel title="Mobile vs Drop-off"><div className="divide-y">{["Mobile","Drop-off"].map((mode) => <div key={mode} className="flex justify-between py-4 text-sm"><span>{mode}</span><span className="tabular font-medium">{active.filter((a) => serviceMode(a)===mode).length} bookings · {money(active.filter((a) => serviceMode(a)===mode).reduce((s,a) => s+bookingAmount(a,leads.data),0))}</span></div>)}</div></Panel><Panel title="Financial reporting"><p className="py-4 text-sm text-slate">Booking value: <span className="font-semibold text-navy">{money(value)}</span>. Received revenue, refunds and outstanding balances cannot be reported until payment recording is available.</p></Panel></div>
+  </div>;
 }

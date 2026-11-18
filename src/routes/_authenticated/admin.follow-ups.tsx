@@ -7,8 +7,9 @@ import { deleteFollowUp } from "@/lib/actions";
 import { useFollowUps, useInvalidate } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
 import { dayKey, fmtDate, FU_STATUSES, FU_TYPES, fullName, label, vehicleName } from "@/lib/format";
+import { adminHead } from "@/lib/workspace";
 
-export const Route = createFileRoute("/_authenticated/admin/follow-ups")({ component: FollowUps });
+export const Route = createFileRoute("/_authenticated/admin/follow-ups")({ head: () => adminHead("Follow-up reminders"), component: FollowUps });
 
 function FollowUps() {
   const f = useFollowUps();

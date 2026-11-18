@@ -17,6 +17,8 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: `Sign in — ${BRAND.productName}` },
       { property: "og:description", content: "Business dashboard sign-in." },
       { name: "robots", content: "noindex" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

@@ -1,87 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageTitle, Panel, inputSm } from "@/components/admin/ui";
-import { useAutomations, useServices } from "@/lib/admin-data";
-import { BUSINESS, TIME_SLOTS } from "@/lib/knowledge";
-import { cn } from "@/lib/utils";
-
-export const Route = createFileRoute("/_authenticated/admin/settings")({ component: Settings });
-
-const INTEGRATIONS = [
-  { name: "Lovable Cloud database", desc: "Customers, leads, quotes and appointments", connected: true },
-  { name: "AI assistant", desc: "Website assistant grounded in your service guide", connected: true },
-  { name: "Twilio", desc: "Two-way SMS and missed-call recovery", connected: false },
-  { name: "Resend", desc: "Transactional email for quotes and confirmations", connected: false },
-  { name: "Google Calendar", desc: "Sync appointments to staff calendars", connected: false },
-];
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="grid gap-1 border-b py-3 last:border-0 sm:grid-cols-3 sm:items-center"><p className="text-sm font-semibold text-navy">{label}</p><div className="sm:col-span-2">{children}</div></div>;
-}
-
-function Toggle({ label, defaultOn = true }: { label: string; defaultOn?: boolean }) {
-  const [on, setOn] = useState(defaultOn);
-  return <div className="flex items-center justify-between border-b py-3 last:border-0"><span className="text-sm text-navy">{label}</span><Switch checked={on} onCheckedChange={setOn} aria-label={label} /></div>;
-}
-
+import { useAutomations } from "@/lib/admin-data";
+import { BUSINESS, TIME_SLOTS, ADDONS } from "@/lib/knowledge";
+import { adminHead } from "@/lib/workspace";
+import { supabase } from "@/integrations/supabase/client";
+export const Route = createFileRoute("/_authenticated/admin/settings")({ head: () => adminHead("Settings"), component: Settings });
+function Row({ label, children }: { label: string; children: React.ReactNode }) { return <div className="grid gap-2 border-b py-4 last:border-0 sm:grid-cols-[180px_minmax(0,1fr)]"><p className="text-sm font-medium">{label}</p><div className="text-sm text-slate">{children}</div></div>; }
 function Settings() {
-  const services = useServices();
-  const autos = useAutomations();
-  return (
-    <div className="space-y-5">
-      <PageTitle title="Settings" subtitle="Workspace configuration for DetailingOS." />
-      <Tabs defaultValue="profile">
-        <TabsList className="h-auto flex-wrap justify-start bg-secondary">
-          {["profile", "hours", "services", "booking", "notifications", "ai", "automations", "integrations", "users"].map((t) => <TabsTrigger key={t} value={t} className="capitalize">{t === "ai" ? "AI Assistant" : t === "profile" ? "Business profile" : t === "hours" ? "Business hours" : t}</TabsTrigger>)}
-        </TabsList>
-        <TabsContent value="profile"><Panel title="Business profile">
-          <Row label="Business name"><input className={inputSm} defaultValue={BUSINESS.name} /></Row>
-          <Row label="Address"><input className={inputSm} defaultValue={BUSINESS.address} /></Row>
-          <Row label="Phone"><input className={inputSm} defaultValue={BUSINESS.phone} /></Row>
-          <Row label="Service area"><input className={inputSm} defaultValue={BUSINESS.serviceArea} /></Row>
-          <div className="pt-3"><Button size="sm" onClick={() => toast.success("Profile saved (demo)")}>Save</Button></div>
-        </Panel></TabsContent>
-        <TabsContent value="hours"><Panel title="Business hours">{BUSINESS.hours.map((h) => <Row key={h.day} label={h.day}><p className="text-sm text-slate">{h.time}</p></Row>)}</Panel></TabsContent>
-        <TabsContent value="services"><Panel title="Services">
-          <ul className="divide-y">{services.data?.map((s) => <li key={s.id} className="flex justify-between py-2 text-sm"><span className="text-navy">{s.name}</span><span className={s.active ? "text-success" : "text-slate"}>{s.active ? "Active" : "Inactive"}</span></li>)}</ul>
-          <Link to="/admin/services" className="mt-3 inline-block text-sm font-semibold text-primary">Manage services →</Link>
-        </Panel></TabsContent>
-        <TabsContent value="booking"><Panel title="Booking settings">
-          <Row label="Start times"><p className="text-sm text-slate">{TIME_SLOTS.join(" · ")}</p></Row>
-          <Row label="Booking window"><p className="text-sm text-slate">14 days ahead · closed Sundays</p></Row>
-          <Toggle label="Allow online booking from the website" />
-          <Toggle label="Require confirmation for PPF and correction" defaultOn={false} />
-        </Panel></TabsContent>
-        <TabsContent value="notifications"><Panel title="Notifications">
-          <Toggle label="Notify team of new website inquiries" /><Toggle label="Notify when a quote is viewed" /><Toggle label="Daily appointment summary" />
-        </Panel></TabsContent>
-        <TabsContent value="ai"><Panel title="AI assistant">
-          <Toggle label="Show assistant on the website" />
-          <Row label="Knowledge source"><p className="text-sm text-slate">Business info, services, pricing ranges, hours, FAQ, policies and booking rules.</p></Row>
-          <Row label="Guardrails"><p className="text-sm text-slate">Answers only from the knowledge source; never invents availability or pricing. Falls back to a deterministic demo mode if AI is unavailable.</p></Row>
-        </Panel></TabsContent>
-        <TabsContent value="automations"><Panel title="Automations">
-          <ul className="divide-y">{autos.data?.map((a) => <li key={a.id} className="flex justify-between py-2 text-sm"><span className="text-navy">{a.name}</span><span className="capitalize text-slate">{a.status}</span></li>)}</ul>
-          <Link to="/admin/automations" className="mt-3 inline-block text-sm font-semibold text-primary">Open Automation Center →</Link>
-        </Panel></TabsContent>
-        <TabsContent value="integrations"><Panel title="Integrations" bodyClass="p-0">
-          <ul className="divide-y">{INTEGRATIONS.map((i) => (
-            <li key={i.name} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div><p className="text-sm font-bold text-navy">{i.name}</p><p className="text-xs text-slate">{i.desc}</p></div>
-              <span className={cn("rounded border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", i.connected ? "border-success/30 bg-success-soft text-success" : "bg-muted text-slate")}>{i.connected ? "Connected" : "Not connected"}</span>
-            </li>
-          ))}</ul>
-          <p className="border-t px-4 py-3 text-xs text-slate">Credentials are stored server-side and never displayed. SMS and email delivery are simulated until connected.</p>
-        </Panel></TabsContent>
-        <TabsContent value="users"><Panel title="Users">
-          <Row label="Mike Torres"><p className="text-sm text-slate">Owner · full access</p></Row>
-          <Row label="Front desk"><p className="text-sm text-slate">Staff · leads, messages, appointments</p></Row>
-        </Panel></TabsContent>
-      </Tabs>
-    </div>
-  );
+  const autos = useAutomations(); const [password,setPassword] = useState(""); const [busy,setBusy] = useState(false);
+  async function updatePassword(e: React.FormEvent) { e.preventDefault(); setBusy(true); const { error } = await supabase.auth.updateUser({ password }); setBusy(false); if(error) { toast.error(error.message); return; } setPassword(""); toast.success("Password updated"); }
+  return <div className="space-y-6"><PageTitle title="Settings" subtitle="Business information, booking rules and account security." /><Tabs defaultValue="profile"><TabsList className="h-auto flex-wrap justify-start gap-1 bg-secondary">{[["profile","Business profile"],["booking","Booking settings"],["services","Services & pricing"],["notifications","Notifications"],["account","Team & account"]].map(([value,title]) => <TabsTrigger key={value} value={value}>{title}</TabsTrigger>)}</TabsList>
+    <TabsContent value="profile"><Panel title="Business profile"><Row label="Business name">{BUSINESS.name}</Row><Row label="Address">{BUSINESS.address}</Row><Row label="Phone">{BUSINESS.phone}</Row><Row label="Email">{BUSINESS.email}</Row><Row label="Service area">{BUSINESS.serviceArea}</Row><p className="mt-4 text-xs text-slate">Business profile editing is not available in this demo. Contact details remain internal.</p></Panel></TabsContent>
+    <TabsContent value="booking"><Panel title="Booking availability">{BUSINESS.hours.map((h) => <Row key={h.day} label={h.day}>{h.time}</Row>)}<Row label="Start times">{TIME_SLOTS.join(" · ")}</Row><Row label="Booking window">Tomorrow through 14 days ahead</Row><Row label="Confirmation">Website requests require owner confirmation. Owner-created bookings are confirmed.</Row><Row label="Capacity">One appointment at a time; services must finish before closing.</Row><p className="mt-4 text-xs text-slate">Availability rules are fixed for this demo.</p></Panel></TabsContent>
+    <TabsContent value="services"><Panel title="Services & pricing"><Row label="Service packages"><Button asChild variant="outline"><Link to="/admin/services">Manage services & pricing</Link></Button></Row><Row label="Optional extras">{ADDONS.length} fixed demo extras</Row><Row label="Visit pricing">Same starting price for Mobile and Drop-off</Row></Panel></TabsContent>
+    <TabsContent value="notifications"><Panel title="Notifications"><Row label="Booking requests">New website requests appear in the bookings list.</Row><Row label="Appointment reminders">Scheduled 24 hours before confirmed appointments.</Row><Row label="Service follow-ups">Scheduled after completion.</Row><Row label="Customer messaging">SMS and email delivery are simulated in demo mode.</Row><Row label="Notification rules"><ul className="space-y-2">{autos.data?.map((a) => <li key={a.id} className="flex justify-between gap-3"><span>{a.name}</span><span className="capitalize">{a.status}</span></li>)}</ul><Button asChild variant="link" className="mt-3 p-0"><Link to="/admin/automations">Manage existing notification rules</Link></Button></Row></Panel></TabsContent>
+    <TabsContent value="account"><Panel title="Account security"><Row label="Team access">Team invitations and role management are not supported in this demo.</Row><form onSubmit={updatePassword} className="mt-5 max-w-md space-y-3"><label className="block text-sm font-medium">New password<input type="password" autoComplete="new-password" required minLength={8} className={`${inputSm} mt-2`} value={password} onChange={(e) => setPassword(e.target.value)} /></label><Button disabled={busy || password.length < 8} type="submit">{busy ? "Updating…" : "Update password"}</Button></form></Panel></TabsContent>
+  </Tabs></div>;
 }

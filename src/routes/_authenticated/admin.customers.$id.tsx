@@ -1,6 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Car, MessageSquarePlus, BellPlus, Save } from "lucide-react";
+import { ArrowLeft, Car, MessageSquarePlus, BellPlus, Save, Pencil, Plus, CalendarPlus } from "lucide-react";
+import { CustomerDialog, VehicleDialog } from "@/components/admin/RecordDialogs";
+import { BookingWizard } from "@/components/admin/BookingWizard";
+import { AppointmentSheet } from "@/components/admin/AppointmentSheet";
+import { adminHead, bookingAmount } from "@/lib/workspace";
+import { Reminders } from "@/components/admin/Reminders";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Panel, StatusBadge, Timeline, RowsSkeleton, ErrorState } from "@/components/admin/ui";
@@ -11,7 +16,7 @@ import { useCustomer, useInvalidate } from "@/lib/admin-data";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDate, fmtDateTime, fmtTime, fullName, money, vehicleName } from "@/lib/format";
 
-export const Route = createFileRoute("/_authenticated/admin/customers/$id")({ component: CustomerProfile });
+export const Route = createFileRoute("/_authenticated/admin/customers/$id")({ head: () => adminHead("Customer profile"), component: CustomerProfile });
 
 function CustomerProfile() {
   const { id } = Route.useParams();
@@ -20,6 +25,7 @@ function CustomerProfile() {
   const nav = useNavigate();
   const [dlg, setDlg] = useState<null | "msg" | "fu">(null);
   const [notes, setNotes] = useState<string | null>(null);
+  const [edit, setEdit] = useState<"customer" | "vehicle" | "booking" | null>(null); const [selected,setSelected] = useState<string | null>(null);
   if (q.isLoading) return <RowsSkeleton rows={8} />;
   if (q.isError || !q.data) return <ErrorState error={q.error} retry={() => q.refetch()} />;
   const { customer, vehicles, leads, quotes, appointments, messages, activities } = q.data;
@@ -44,15 +50,19 @@ function CustomerProfile() {
           <p className="mt-1 text-xs text-slate">Customer since {fmtDate(customer.created_at, { month: "long", year: "numeric" })}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => setEdit("booking")}><CalendarPlus /> New booking</Button>
+          <Button size="sm" variant="outline" onClick={() => setEdit("customer")}><Pencil /> Edit customer</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("msg")}><MessageSquarePlus /> Message</Button>
           <Button size="sm" variant="outline" onClick={() => setDlg("fu")}><BellPlus /> Follow-up</Button>
           <DeleteButton kind="Customer" name={fullName(customer)} detail={`This also removes ${vehicles.length} vehicle(s), ${leads.length} lead(s), ${quotes.length} quote(s), ${appointments.length} appointment(s) and ${messages.length} message(s).`} onConfirm={() => deleteCustomer(customer.id)} onDeleted={() => nav({ to: "/admin/customers" })} />
         </div>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3"><div className="border-b py-3"><p className="text-xs text-slate">Total bookings</p><p className="mt-1 text-2xl font-bold">{appointments.length}</p></div><div className="border-b py-3"><p className="text-xs text-slate">Completed service value</p><p className="mt-1 text-2xl font-bold">{money(history.reduce((s,a) => s + bookingAmount(a,leads),0))}</p></div><div className="border-b py-3"><p className="text-xs text-slate">Payments received / outstanding</p><p className="mt-1 text-sm text-slate">Not recorded</p></div></div>
+
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <Panel title={`Vehicles (${vehicles.length})`}>
+          <Panel title={`Vehicles (${vehicles.length})`} action={<Button variant="ghost" size="sm" onClick={() => setEdit("vehicle")}><Plus /> Add vehicle</Button>}>
             <div className="grid gap-2 sm:grid-cols-2">
               {vehicles.map((v) => (
                 <Link key={v.id} to="/admin/vehicles/$id" params={{ id: v.id }} className="flex items-center gap-3 rounded-md border p-3 hover:border-primary">
@@ -68,7 +78,7 @@ function CustomerProfile() {
           </Panel>
           <div className="grid gap-4 md:grid-cols-2">
             <Panel title="Appointments" bodyClass="p-0">
-              <ul className="divide-y">{appointments.map((a) => <li key={a.id} className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm"><div><p className="font-semibold text-navy">{a.service?.name}</p><p className="text-xs text-slate">{fmtDateTime(a.starts_at)}</p></div><StatusBadge status={a.status} /></li>)}</ul>
+              <ul className="divide-y">{appointments.map((a) => <li key={a.id}><Button variant="ghost" className="h-auto w-full justify-between gap-2 whitespace-normal py-3 text-left" onClick={() => setSelected(a.id)}><span><span className="block font-semibold text-navy">{a.service?.name}</span><span className="block text-xs text-slate">{fmtDateTime(a.starts_at)}</span></span><StatusBadge status={a.status} /></Button></li>)}</ul>
               {!appointments.length && <p className="p-4 text-sm text-slate">No appointments.</p>}
             </Panel>
             <Panel title="Quotes" bodyClass="p-0">
@@ -83,6 +93,7 @@ function CustomerProfile() {
           </Panel>
         </div>
         <div className="space-y-4">
+          <Panel title="Follow-up reminders"><Reminders customerId={customer.id} /></Panel>
           <Panel title="Notes" action={notes !== null && <Button size="sm" variant="ghost" onClick={saveNotes}><Save /> Save</Button>}>
             <textarea aria-label="Customer notes" rows={3} className="w-full resize-none rounded-md border bg-background p-2 text-sm text-navy outline-none focus:border-primary" value={notes ?? customer.notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a note…" />
           </Panel>
@@ -96,6 +107,7 @@ function CustomerProfile() {
       </div>
       <MessageDialog open={dlg === "msg"} onOpenChange={(o) => setDlg(o ? "msg" : null)} ctx={ctx} />
       <FollowUpDialog open={dlg === "fu"} onOpenChange={(o) => setDlg(o ? "fu" : null)} ctx={ctx} />
+      {edit === "customer" && <CustomerDialog customer={customer} onClose={() => setEdit(null)} />}{edit === "vehicle" && <VehicleDialog customerId={customer.id} onClose={() => setEdit(null)} />}{edit === "booking" && <BookingWizard customerId={customer.id} onClose={() => setEdit(null)} />}<AppointmentSheet appt={appointments.find((a) => a.id === selected) ?? null} onClose={() => setSelected(null)} />
     </div>
   );
 }

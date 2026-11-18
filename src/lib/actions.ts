@@ -2,6 +2,8 @@
 // logs the matching timeline activity so every screen stays connected.
 import { supabase } from "@/integrations/supabase/client";
 import type { LeadStatus } from "./format";
+import { overlapsBooking } from "./workspace";
+import { bookingDayBounds, validateBookingSlot } from "./booking-validation";
 
 async function must<R>(p: PromiseLike<{ data: R | null; error: { message: string } | null }>) {
   const { data, error } = await p;
@@ -44,11 +46,14 @@ export async function createQuote(input: {
 }
 
 export async function updateQuote(id: string, patch: { status?: string; discount?: number; notes?: string }, items?: { description: string; quantity: number; unit_price: number }[]) {
+  const before = await must<{ status: string; number: string; customer_id: string; lead_id: string | null; vehicle_id: string | null }>(supabase.from("quotes").select("status,number,customer_id,lead_id,vehicle_id").eq("id",id).single());
   await must(supabase.from("quotes").update(patch).eq("id", id));
   if (items) {
     await must(supabase.from("quote_items").delete().eq("quote_id", id));
     if (items.length) await must(supabase.from("quote_items").insert(items.map((it, i) => ({ ...it, quote_id: id, sort: i }))));
   }
+  if (before?.lead_id && items) await must(supabase.from("leads").update({ estimated_value: Math.max(0,items.reduce((sum,i) => sum+i.quantity*i.unit_price,0)-(patch.discount ?? 0)) }).eq("id",before.lead_id));
+  if (before && patch.status === "sent" && before.status !== "sent") await quoteSentEffects(before);
 }
 
 async function quoteSentEffects(quote: { number: string; customer_id: string; lead_id: string | null; vehicle_id?: string | null }) {
@@ -65,24 +70,52 @@ export async function setQuoteStatus(quote: { id: string; number: string; custom
   if (status === "declined" && quote.lead_id) await must(supabase.from("leads").update({ status: "lost" }).eq("id", quote.lead_id));
 }
 
-export async function bookAppointment(input: { lead_id?: string | null; customer_id: string; vehicle_id?: string | null; service_id?: string | null; starts_at: string; duration_hours: number; customerName?: string; serviceName?: string }) {
-  const appt = await must(
-    supabase.from("appointments").insert({ lead_id: input.lead_id ?? null, customer_id: input.customer_id, vehicle_id: input.vehicle_id ?? null, service_id: input.service_id ?? null, starts_at: input.starts_at, duration_hours: input.duration_hours, status: "confirmed" }).select("id").single(),
+export async function bookAppointment(input: { lead_id?: string | null; customer_id: string; vehicle_id?: string | null; service_id?: string | null; starts_at: string; duration_hours: number; customerName?: string; serviceName?: string; location?: string; notes?: string }) {
+  await assertAvailable(input.starts_at, input.duration_hours);
+  if (input.vehicle_id) {
+    const vehicle = await must<{ customer_id: string }>(supabase.from("vehicles").select("customer_id").eq("id", input.vehicle_id).single());
+    if (vehicle?.customer_id !== input.customer_id) throw new Error("Select a vehicle registered to this customer.");
+  }
+  const appt = await must<{ id: string }>(
+    supabase.from("appointments").insert({ lead_id: input.lead_id ?? null, customer_id: input.customer_id, vehicle_id: input.vehicle_id ?? null, service_id: input.service_id ?? null, starts_at: input.starts_at, duration_hours: input.duration_hours, status: "confirmed", ...(input.location ? { location: input.location } : {}), ...(input.notes ? { notes: input.notes } : {}) }).select("id").single(),
   );
   if (input.lead_id) await must(supabase.from("leads").update({ status: "booked", updated_at: new Date().toISOString() }).eq("id", input.lead_id));
   await logActivity({ lead_id: input.lead_id, customer_id: input.customer_id, type: "booked", title: "Appointment booked", detail: input.serviceName ?? "" });
   await must(supabase.from("messages").insert({ customer_id: input.customer_id, lead_id: input.lead_id ?? null, channel: "sms", direction: "outbound", automated: true, body: `You're confirmed for ${input.serviceName ?? "your appointment"}. We'll send a reminder 24 hours before.` }));
-  await must(supabase.from("follow_ups").insert({ customer_id: input.customer_id, vehicle_id: input.vehicle_id ?? null, lead_id: input.lead_id ?? null, type: "appointment_reminder", reason: "Appointment reminder — 24 hours before", next_contact_at: new Date(new Date(input.starts_at).getTime() - 24 * 3600000).toISOString(), status: "scheduled" }));
+  await must(supabase.from("follow_ups").insert({ customer_id: input.customer_id, vehicle_id: input.vehicle_id ?? null, lead_id: input.lead_id ?? null, type: "appointment_reminder", reason: `Booking ${appt.id}`, next_contact_at: new Date(new Date(input.starts_at).getTime() - 24 * 3600000).toISOString(), status: "scheduled" }));
   await logActivity({ lead_id: input.lead_id, customer_id: input.customer_id, type: "reminder", title: "Reminder scheduled", detail: "SMS reminder 24 hours before" });
   return appt;
 }
 
 export async function setAppointmentStatus(a: { id: string; customer_id: string; vehicle_id: string | null; lead_id: string | null }, status: string) {
+  const current = await must<{ status: string }>(supabase.from("appointments").select("status").eq("id", a.id).single());
+  if (current?.status === status) return;
   await must(supabase.from("appointments").update({ status }).eq("id", a.id));
   if (status === "completed") {
     await logActivity({ lead_id: a.lead_id, customer_id: a.customer_id, type: "completed", title: "Service completed", detail: "Vehicle history updated" });
     if (a.lead_id) await must(supabase.from("leads").update({ status: "completed" }).eq("id", a.lead_id));
     await must(supabase.from("follow_ups").insert({ customer_id: a.customer_id, vehicle_id: a.vehicle_id, lead_id: a.lead_id, type: "post_service", reason: "Post-service check-in and review request", next_contact_at: new Date(Date.now() + 86400000).toISOString(), status: "scheduled" }));
+  }
+}
+
+async function assertAvailable(start: string, duration: number, excludeId?: string) {
+  if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(Date.parse(start))) throw new Error("Choose a valid appointment time and duration.");
+  if (Date.parse(start) <= Date.now()) throw new Error("Choose a future appointment time.");
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Chicago" }).format(new Date(start));
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour:"numeric", minute:"2-digit" }).format(new Date(start));
+  validateBookingSlot(date,time,duration);
+  const bounds = bookingDayBounds(date);
+  const rows = await must<{ id: string; starts_at: string; duration_hours: number; status: string }[]>(supabase.from("appointments").select("id,starts_at,duration_hours,status").gte("starts_at", bounds.start).lt("starts_at", bounds.end));
+  if (overlapsBooking(rows ?? [], start, duration, excludeId)) throw new Error("That appointment overlaps an existing booking. Choose another time.");
+}
+
+export async function editAppointment(id: string, patch: { starts_at: string; duration_hours: number; location: string; notes: string }) {
+  await assertAvailable(patch.starts_at, patch.duration_hours, id);
+  await must(supabase.from("appointments").update(patch).eq("id", id));
+  const a = await must<{ customer_id: string; lead_id: string | null }>(supabase.from("appointments").select("customer_id,lead_id").eq("id", id).single());
+  if (a) {
+    await must(supabase.from("follow_ups").update({ next_contact_at: new Date(Date.parse(patch.starts_at) - 86400000).toISOString() }).eq("customer_id", a.customer_id).eq("type", "appointment_reminder").eq("status", "scheduled").match(a.lead_id ? { lead_id: a.lead_id } : { reason: `Booking ${id}` }));
+    await logActivity({ customer_id: a.customer_id, lead_id: a.lead_id, type: "rescheduled", title: "Booking rescheduled" });
   }
 }
 

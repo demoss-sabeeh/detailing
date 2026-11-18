@@ -5,8 +5,13 @@ import { DeleteButton } from "@/components/admin/delete";
 import { deleteVehicle } from "@/lib/actions";
 import { useVehicle } from "@/lib/admin-data";
 import { fmtDate, fmtDateTime, fullName, money, vehicleName } from "@/lib/format";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { VehicleDialog } from "@/components/admin/RecordDialogs";
+import { BookingWizard } from "@/components/admin/BookingWizard";
+import { adminHead } from "@/lib/workspace";
 
-export const Route = createFileRoute("/_authenticated/admin/vehicles/$id")({ component: VehicleProfile });
+export const Route = createFileRoute("/_authenticated/admin/vehicles/$id")({ head: () => adminHead("Vehicle profile"), component: VehicleProfile });
 
 const NEXT: Record<string, [string, number]> = {
   "ceramic-coating": ["Maintenance Detail", 42], "paint-protection-film": ["Maintenance Detail", 42], "paint-correction": ["Ceramic Coating", 14],
@@ -17,6 +22,7 @@ function VehicleProfile() {
   const { id } = Route.useParams();
   const q = useVehicle(id);
   const nav = useNavigate();
+  const [edit,setEdit] = useState(false); const [booking,setBooking] = useState(false);
   if (q.isLoading) return <RowsSkeleton rows={6} />;
   if (q.isError || !q.data) return <ErrorState error={q.error} retry={() => q.refetch()} />;
   const { vehicle, appointments, quotes } = q.data;
@@ -31,6 +37,7 @@ function VehicleProfile() {
       <div className="rounded-md border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3"><Car className="h-6 w-6 text-primary" /><h1 className="min-w-0 flex-1 text-2xl font-extrabold text-navy">{vehicleName(vehicle)}</h1><DeleteButton kind="Vehicle" name={vehicleName(vehicle)} detail="Its leads, quotes and appointments stay on the customer record without a vehicle attached." onConfirm={() => deleteVehicle(vehicle.id)} onDeleted={() => nav({ to: "/admin/vehicles" })} /></div>
         <p className="mt-1 text-sm text-slate">Color · {vehicle.color || "—"} &nbsp;·&nbsp; Owner · {vehicle.customer && <Link to="/admin/customers/$id" params={{ id: vehicle.customer_id }} className="font-semibold text-primary">{fullName(vehicle.customer)}</Link>}</p>
+        <div className="mt-4 flex gap-2"><Button size="sm" onClick={() => setBooking(true)}>New booking</Button><Button size="sm" variant="outline" onClick={() => setEdit(true)}>Edit vehicle</Button></div>
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-md border bg-surface p-4"><p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate">Last service</p><p className="mt-2 text-lg font-bold text-navy">{last ? last.service?.name : "None yet"}</p><p className="text-sm text-slate">{last ? fmtDate(last.starts_at, { month: "long", day: "numeric", year: "numeric" }) : "—"}</p></div>
@@ -49,6 +56,7 @@ function VehicleProfile() {
         </Panel>
       </div>
       {vehicle.notes && <Panel title="Notes"><p className="text-sm text-navy">{vehicle.notes}</p></Panel>}
+      {edit && <VehicleDialog vehicle={vehicle} onClose={() => setEdit(false)} />}{booking && <BookingWizard customerId={vehicle.customer_id} vehicleId={vehicle.id} onClose={() => setBooking(false)} />}
     </div>
   );
 }

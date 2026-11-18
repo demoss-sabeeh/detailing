@@ -9,8 +9,11 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { SERVICES, BUSINESS } from "@/lib/knowledge";
 import { GALLERY } from "@/lib/gallery";
 import { money } from "@/lib/format";
+import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
+import heroPoster from "@/assets/detailing-hero-poster.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   head: () => ({
     meta: [
       { title: "DetailingOS — Premium Car Detailing in Dallas, TX" },
@@ -19,6 +22,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Paint correction, ceramic coating, PPF and full detailing in Dallas, Texas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: heroPoster.url },
+      { name: "twitter:image", content: heroPoster.url },
     ],
     scripts: [
       {
@@ -58,6 +63,7 @@ const REVIEWS = [
 ];
 
 function Home() {
+  const catalog = useServiceCatalog();
   const [lightbox, setLightbox] = useState<number | null>(null);
   const shots = GALLERY.slice(0, 5);
   return (
@@ -78,7 +84,7 @@ function Home() {
               <Button asChild variant="cta-outline" size="lg"><Link to="/book">Book an appointment</Link></Button>
             </div>
             <dl className="mt-10 grid max-w-md animate-rise grid-cols-3 border-t pt-5 [animation-delay:320ms]">
-              {[["From", money(SERVICES[5].priceFrom)], ["Services", String(SERVICES.length)], ["Booking", "Online"]].map(([k, v]) => (
+              {[["From", money(catalog.length ? Math.min(...catalog.map((s) => s.priceFrom)) : 0)], ["Services", String(catalog.length)], ["Booking", "Online"]].map(([k, v]) => (
                 <div key={k}><dt className="eyebrow text-slate">{k}</dt><dd className="mt-1 text-lg font-bold text-navy tabular">{v}</dd></div>
               ))}
             </dl>
@@ -123,7 +129,7 @@ function Home() {
           From a maintenance wash to full-body film, each service starts with an inspection and a clear recommendation.
         </SectionHead>
         <div className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-          {SERVICES.slice(0, 6).map((s) => (
+          {catalog.slice(0, 6).map((s) => (
             <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className="group block">
               <div className="overflow-hidden rounded-md bg-muted">
                 <img src={GALLERY[SERVICE_IMAGES[s.slug] ?? 0].src} alt="" loading="lazy" width={1200} height={912} className="aspect-[3/2] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />

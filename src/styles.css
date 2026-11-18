@@ -118,7 +118,7 @@
     font-family: var(--font-sans);
     font-feature-settings: "tnum" 0;
   }
-  h1, h2, h3 { letter-spacing: -0.015em; text-wrap: balance; }
+  h1, h2, h3 { letter-spacing: 0; text-wrap: balance; }
   p { text-wrap: pretty; }
   ::selection { background: color-mix(in oklab, var(--color-primary) 22%, transparent); }
   :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
@@ -129,7 +129,7 @@
 @utility font-display {
   font-family: var(--font-display);
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
 }
 @utility tabular { font-variant-numeric: tabular-nums; }
 @utility eyebrow {
@@ -160,4 +160,30 @@
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* Scoped owner workspace: the public website retains its own editorial style. */
+.admin-workspace {
+  --radius: 0.625rem;
+  --background: oklch(0.978 0.003 260);
+  --foreground: oklch(0.286 0.055 255);
+  --navy: oklch(0.286 0.055 255);
+  --slate: oklch(0.51 0.027 255);
+  --muted-foreground: var(--slate);
+  --muted: oklch(0.964 0.004 255);
+  --border: oklch(0.935 0.009 255);
+  --input: var(--border);
+  --primary: oklch(0.546 0.215 263);
+  --success: oklch(0.626 0.132 158);
+  --warning: oklch(0.754 0.141 76);
+  --destructive: oklch(0.609 0.187 25);
+  --sidebar: oklch(0.226 0.044 258);
+}
+.admin-workspace :is(h1,h2,h3,p,span,th,label,a) { letter-spacing: 0; }
+.admin-workspace table { table-layout: fixed; }
+.admin-workspace td { overflow-wrap: anywhere; }
+.admin-workspace :is(input,textarea,select) { min-width: 0; }
+@media (width < 640px) {
+  .admin-workspace :is(input,textarea,select) { font-size: 16px; }
+  .admin-workspace button:not([role="switch"]):not([role="checkbox"]) { min-height: 40px; }
 }

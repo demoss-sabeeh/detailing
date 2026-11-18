@@ -14,8 +14,10 @@ import { SERVICES, ADDONS, serviceBySlug, bookingCart } from "@/lib/knowledge";
 import { money, TZ } from "@/lib/format";
 import { createBooking, getAvailability } from "@/lib/public.functions";
 import { cn } from "@/lib/utils";
+import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
 
 export const Route = createFileRoute("/book")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
@@ -23,6 +25,8 @@ export const Route = createFileRoute("/book")({
       { name: "description", content: "Choose a service and an available time at the DetailingOS detailing studio in Dallas. Instant confirmation." },
       { property: "og:title", content: "Book an Appointment — DetailingOS" },
       { property: "og:description", content: "Pick an available time online." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: BookPage,
@@ -46,18 +50,19 @@ function nextDays(n: number) {
 }
 
 function BookPage() {
+  const catalog = useServiceCatalog();
   const search = Route.useSearch();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ location: string } | null>(null);
-  const [f, setF] = useState({ services: search.service && serviceBySlug(search.service) ? [search.service] : ([] as string[]), addons: [] as string[], year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
+  const [f, setF] = useState({ services: search.service && catalog.some((s) => s.slug === search.service) ? [search.service] : ([] as string[]), addons: [] as string[], year: "", make: "", model: "", color: "", date: "", time: "", firstName: "", lastName: "", email: "", phone: "", notes: "" });
   const set = (k: "year" | "make" | "model" | "color" | "firstName" | "lastName" | "email" | "phone" | "notes") => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }));
   const days = useMemo(() => nextDays(14), []);
   const avail = useServerFn(getAvailability);
   const book = useServerFn(createBooking);
   const slots = useQuery({ queryKey: ["availability", f.date, f.services, f.addons], queryFn: () => avail({ data: { date: f.date, serviceSlugs: f.services, addonSlugs: f.addons } }), enabled: !!f.date && f.services.length > 0 && step === 3, retry: 3, retryDelay: (n) => Math.min(1000 * 2 ** n, 5000) });
-  const cart = bookingCart(f.services, f.addons);
+  const cart = bookingCart(f.services, f.addons,catalog);
 
   const checks: Record<number, () => Record<string, string | undefined>> = {
     0: () => (!f.services.length ? { service: "Choose at least one service" } : cart.durationHours > MAX_VISIT_HOURS ? { service: `This is about ${cart.durationHours} hours of work, more than one day. Remove a service, or request a quote for a multi-day visit.` } : {}),
@@ -139,7 +144,7 @@ function BookPage() {
                   <StepPanel k={0} title="Select services">
                     <p className="-mt-4 mb-4 text-sm text-slate">Choose one or more services for this visit.</p>
                     <div className="grid gap-2">
-                      {SERVICES.map((s) => <OptionCard key={s.slug} selected={f.services.includes(s.slug)} onClick={() => setF((p) => ({ ...p, services: toggle(p.services, s.slug), time: "" }))} title={s.name} meta={`From ${money(s.priceFrom)} · ~${s.durationHours} hrs`} />)}
+                      {catalog.map((s) => <OptionCard key={s.slug} selected={f.services.includes(s.slug)} onClick={() => setF((p) => ({ ...p, services: toggle(p.services, s.slug), time: "" }))} title={s.name} meta={`From ${money(s.priceFrom)} · ~${s.durationHours} hrs`} />)}
                     </div>
                     <h3 className="mt-8 text-xs font-bold uppercase tracking-[0.12em] text-slate">Add-ons <span className="font-medium normal-case tracking-normal">(optional)</span></h3>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">

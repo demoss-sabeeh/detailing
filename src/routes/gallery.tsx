@@ -9,6 +9,8 @@ export const Route = createFileRoute("/gallery")({
       { name: "description", content: "Selected ceramic coating, paint correction and paint protection film work from the DetailingOS studio in Dallas." },
       { property: "og:title", content: "Gallery — DetailingOS" },
       { property: "og:description", content: "Selected detailing work from our Dallas studio." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: GalleryPage,

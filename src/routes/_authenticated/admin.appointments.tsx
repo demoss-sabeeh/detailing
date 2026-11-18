@@ -1,54 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { PageTitle, StatusBadge, RowsSkeleton, EmptyState, selectCls, inputSm } from "@/components/admin/ui";
+import { useState } from "react";
+import { Plus, Search, CalendarClock, CheckCheck, Clock, CalendarCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PageTitle, StatusBadge, RowsSkeleton, EmptyState, ErrorState, Kpi, selectCls, inputSm } from "@/components/admin/ui";
 import { AppointmentSheet } from "@/components/admin/AppointmentSheet";
-import { RowDelete } from "@/components/admin/delete";
-import { deleteAppointment } from "@/lib/actions";
-import { useAppointments, useServices, type Appointment } from "@/lib/admin-data";
-import { APPT_STATUSES, dayKey, fmtDate, fmtTime, fullName, label, vehicleName } from "@/lib/format";
-
-export const Route = createFileRoute("/_authenticated/admin/appointments")({ component: Appointments });
-
+import { BookingWizard } from "@/components/admin/BookingWizard";
+import { Pagination } from "@/components/admin/Pagination";
+import { useAppointments, useLeads } from "@/lib/admin-data";
+import { APPT_STATUSES, dayKey, fmtDate, fmtTime, fullName, label, money, vehicleName } from "@/lib/format";
+import { adminHead, bookingAmount, serviceMode } from "@/lib/workspace";
+export const Route = createFileRoute("/_authenticated/admin/appointments")({ head: () => adminHead("Bookings"), component: Appointments });
 function Appointments() {
-  const a = useAppointments();
-  const services = useServices();
-  const [status, setStatus] = useState("");
-  const [service, setService] = useState("");
-  const [date, setDate] = useState("");
-  const [sel, setSel] = useState<Appointment | null>(null);
-  const rows = useMemo(() => (a.data ?? []).filter((x) => (!status || x.status === status) && (!service || x.service_id === service) && (!date || dayKey(x.starts_at) === date)), [a.data, status, service, date]);
-  const groups = rows.reduce<Record<string, Appointment[]>>((acc, x) => ((acc[dayKey(x.starts_at)] ??= []).push(x), acc), {});
-  const current = sel ? a.data?.find((x) => x.id === sel.id) ?? null : null;
-  return (
-    <div className="space-y-5">
-      <PageTitle title="Appointments" subtitle={`${rows.length} appointments`} />
-      <div className="flex flex-wrap gap-2">
-        <input type="date" aria-label="Date" className={`${inputSm} w-auto`} value={date} onChange={(e) => setDate(e.target.value)} />
-        <select aria-label="Status" className={selectCls} value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All statuses</option>{APPT_STATUSES.map((s) => <option key={s} value={s}>{label(s)}</option>)}</select>
-        <select aria-label="Service" className={selectCls} value={service} onChange={(e) => setService(e.target.value)}><option value="">All services</option>{services.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
-      </div>
-      {a.isLoading ? <RowsSkeleton /> : rows.length === 0 ? <EmptyState title="No appointments" /> : (
-        <div className="space-y-4">
-          {Object.entries(groups).map(([d, list]) => (
-            <section key={d} className="overflow-hidden rounded-md border bg-surface">
-              <h2 className="border-b bg-secondary/50 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-navy">{fmtDate(list[0].starts_at, { weekday: "long", month: "long", day: "numeric" })}{d === dayKey(new Date()) && <span className="ml-2 text-primary">Today</span>}</h2>
-              <ul className="divide-y">
-                {list.map((x) => (
-                  <li key={x.id} className="flex items-center">
-                    <button onClick={() => setSel(x)} className="flex min-w-0 flex-1 items-center gap-4 py-2.5 pl-4 text-left hover:bg-secondary/40">
-                      <span className="tabular w-16 text-sm font-bold text-navy">{fmtTime(x.starts_at)}</span>
-                      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-navy">{fullName(x.customer)}</span><span className="block truncate text-xs text-slate">{vehicleName(x.vehicle)} · {x.service?.name}</span></span>
-                      <StatusBadge status={x.status} />
-                    </button>
-                    <RowDelete className="px-1" kind="Appointment" name={`${x.service?.name ?? "Appointment"} · ${fullName(x.customer)} · ${fmtDate(x.starts_at)} ${fmtTime(x.starts_at)}`} onConfirm={() => deleteAppointment(x.id)} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
-      <AppointmentSheet appt={current} onClose={() => setSel(null)} />
-    </div>
-  );
+  const a = useAppointments(); const leads = useLeads(); const [q, setQ] = useState(""); const [status, setStatus] = useState(""); const [mode, setMode] = useState(""); const [date, setDate] = useState(""); const [sort, setSort] = useState("appointment"); const [sel, setSel] = useState<string | null>(null); const [create, setCreate] = useState(false); const [page, setPage] = useState(1);
+  const all = a.data ?? []; const rows = all.filter((x) => (!status || x.status === status) && (!mode || serviceMode(x) === mode) && (!date || dayKey(x.starts_at) === date) && `${fullName(x.customer)} ${x.customer?.phone} ${vehicleName(x.vehicle)} ${x.id} ${x.service?.name}`.toLowerCase().includes(q.toLowerCase())).sort((a,b) => sort === "oldest" ? Date.parse(a.created_at) - Date.parse(b.created_at) : sort === "newest" ? Date.parse(b.created_at) - Date.parse(a.created_at) : Date.parse(b.starts_at) - Date.parse(a.starts_at));
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(rows.length / 12))); const visible = rows.slice((currentPage - 1) * 12, currentPage * 12);
+  const change = (fn: () => void) => { fn(); setPage(1); };
+  return <div className="space-y-6"><PageTitle title="Bookings" subtitle="Appointments, service details and customer requests." actions={<Button onClick={() => setCreate(true)}><Plus /> New booking</Button>} />
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"><Kpi icon={CalendarClock} label="Total bookings" value={all.length} hint={`${all.filter((x) => dayKey(x.starts_at) === dayKey(new Date())).length} today`} /><Kpi icon={Clock} label="Pending" value={all.filter((x) => x.status === "requested").length} hint="Awaiting confirmation" /><Kpi icon={CalendarCheck} label="Confirmed" value={all.filter((x) => ["confirmed", "in_progress"].includes(x.status)).length} hint={`${all.filter((x) => x.status === "in_progress").length} in progress`} /><Kpi icon={CheckCheck} label="Completed" value={all.filter((x) => x.status === "completed").length} hint={`${all.filter((x) => x.status === "cancelled").length} cancelled`} /></div>
+    <div className="flex flex-wrap gap-2"><div className="relative min-w-0 flex-1 basis-64"><Search className="absolute left-3 top-3 h-4 w-4 text-slate sm:top-2.5" /><input aria-label="Search bookings" className={`${inputSm} pl-9`} placeholder="Customer, phone, vehicle or booking ID" value={q} onChange={(e) => change(() => setQ(e.target.value))} /></div><select aria-label="Booking status filter" className={selectCls} value={status} onChange={(e) => change(() => setStatus(e.target.value))}><option value="">All statuses</option>{APPT_STATUSES.map((s) => <option key={s} value={s}>{s === "requested" ? "Pending" : label(s)}</option>)}</select><input aria-label="Booking date filter" type="date" className={`${inputSm} w-auto`} value={date} onChange={(e) => change(() => setDate(e.target.value))} /><select aria-label="Visit type filter" className={selectCls} value={mode} onChange={(e) => change(() => setMode(e.target.value))}><option value="">All visit types</option><option>Mobile</option><option>Drop-off</option></select><select aria-label="Sort bookings" className={selectCls} value={sort} onChange={(e) => change(() => setSort(e.target.value))}><option value="appointment">Appointment date</option><option value="newest">Newest</option><option value="oldest">Oldest</option></select>{(q || status || mode || date) && <Button variant="ghost" onClick={() => change(() => { setQ("");setStatus("");setMode("");setDate(""); })}>Clear filters</Button>}</div>
+    <div className="overflow-hidden rounded-lg border bg-surface">{a.isLoading ? <div className="p-4"><RowsSkeleton /></div> : a.isError ? <ErrorState error={a.error} retry={() => a.refetch()} /> : !rows.length ? <EmptyState title="No bookings found" action={<Button variant="outline" onClick={() => setCreate(true)}>New booking</Button>} /> : <><table className="hidden w-full text-left text-xs xl:table"><thead className="border-b bg-secondary/50 text-slate"><tr>{["Booking / Customer", "Vehicle", "Service", "Visit type", "Appointment", "Amount", "Status", ""].map((h,i) => <th key={i} className={`p-3 font-medium ${i === 7 ? "w-16" : ""}`}>{h}</th>)}</tr></thead><tbody className="divide-y">{visible.map((x) => <tr key={x.id} className="hover:bg-secondary/40"><td className="p-3"><Button variant="link" className="h-auto justify-start whitespace-normal p-0 text-left" onClick={() => setSel(x.id)}>{fullName(x.customer)}</Button><p className="mt-1 text-slate">{x.customer?.phone}</p><p className="mt-1 text-[10px] text-slate">#{x.id.slice(0,8).toUpperCase()}</p></td><td className="p-3">{vehicleName(x.vehicle)}</td><td className="p-3">{x.service?.name}</td><td className="p-3 text-slate">{serviceMode(x)}</td><td className="p-3">{fmtDate(x.starts_at)}<p className="mt-1 text-slate">{fmtTime(x.starts_at)}</p></td><td className="tabular p-3 font-semibold">{money(bookingAmount(x, leads.data))}</td><td className="p-3"><StatusBadge status={x.status} /></td><td className="p-3"><Button size="sm" variant="ghost" onClick={() => setSel(x.id)}>View</Button></td></tr>)}</tbody></table><ul className="divide-y xl:hidden">{visible.map((x) => <li key={x.id}><Button variant="ghost" className="h-auto w-full justify-start whitespace-normal rounded-none p-4 text-left" onClick={() => setSel(x.id)}><span className="min-w-0 flex-1"><span className="flex flex-wrap items-center justify-between gap-2"><span className="font-semibold">{fullName(x.customer)}</span><StatusBadge status={x.status} /></span><span className="mt-2 block text-xs text-slate">{vehicleName(x.vehicle)} · {x.service?.name}</span><span className="mt-3 flex justify-between gap-2 text-xs"><span>{fmtDate(x.starts_at)} · {fmtTime(x.starts_at)} · {serviceMode(x)}</span><span className="tabular font-semibold">{money(bookingAmount(x, leads.data))}</span></span></span></Button></li>)}</ul></>}</div>
+    <Pagination page={currentPage} total={rows.length} onChange={setPage} /><AppointmentSheet appt={all.find((x) => x.id === sel) ?? null} onClose={() => setSel(null)} />{create && <BookingWizard onClose={() => setCreate(false)} />}
+  </div>;
 }

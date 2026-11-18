@@ -12,8 +12,10 @@ import { setQuoteStatus, deleteQuote } from "@/lib/actions";
 import { fmtDate, fullName, label, money, QUOTE_STATUSES, vehicleName } from "@/lib/format";
 import { BUSINESS } from "@/lib/knowledge";
 import { cn } from "@/lib/utils";
+import { adminHead } from "@/lib/workspace";
 
 export const Route = createFileRoute("/_authenticated/admin/quotes")({
+  head: () => adminHead("Quotes"),
   validateSearch: (s: Record<string, unknown>): { open?: string } => (typeof s.open === "string" ? { open: s.open } : {}),
   component: Quotes,
 });

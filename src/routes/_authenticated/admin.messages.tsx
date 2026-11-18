@@ -10,8 +10,9 @@ import { RowDelete } from "@/components/admin/delete";
 import { sendMessage, setLeadStatus, deleteMessage } from "@/lib/actions";
 import { fmtDateTime, fmtTime, fullName, timeAgo, vehicleName } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { adminHead } from "@/lib/workspace";
 
-export const Route = createFileRoute("/_authenticated/admin/messages")({ component: Inbox });
+export const Route = createFileRoute("/_authenticated/admin/messages")({ head: () => adminHead("Customer conversations"), component: Inbox });
 
 const ICON = { sms: MessageSquare, email: Mail, ai: Bot };
 
@@ -27,7 +28,7 @@ function Inbox() {
 
   const threads = useMemo(() => {
     const m = new Map<string, Message[]>();
-    for (const x of msgs.data ?? []) if (!channel || x.channel === channel) (m.get(x.customer_id) ?? m.set(x.customer_id, []).get(x.customer_id)!).push(x);
+    for (const x of msgs.data ?? []) if (!channel || x.channel === channel) { const list = m.get(x.customer_id) ?? []; list.push(x); m.set(x.customer_id,list); }
     return [...m.entries()].map(([cid, list]) => ({ cid, list, last: list[list.length - 1] })).sort((a, b) => +new Date(b.last.created_at) - +new Date(a.last.created_at));
   }, [msgs.data, channel]);
 
@@ -109,7 +110,7 @@ function Inbox() {
               <div className="grid gap-1.5 border-t pt-4">
                 <Button size="sm" variant="outline" disabled={!lead} onClick={() => setDlg("quote")}>Create quote</Button>
                 <Button size="sm" onClick={() => setDlg("book")}>Book appointment</Button>
-                <Button size="sm" variant="outline" disabled={!lead} onClick={async () => { await setLeadStatus(lead!, "qualified"); invalidate(); toast.success("Lead qualified"); }}>Qualify lead</Button>
+                <Button size="sm" variant="outline" disabled={!lead} onClick={async () => { if (!lead) return; await setLeadStatus(lead, "qualified"); invalidate(); toast.success("Lead qualified"); }}>Qualify lead</Button>
                 <Button size="sm" variant="outline" onClick={() => setDlg("fu")}>Create follow-up</Button>
               </div>
             </div>

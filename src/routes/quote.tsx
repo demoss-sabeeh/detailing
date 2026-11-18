@@ -11,8 +11,10 @@ import { Field, OptionCard, StepPanel, Stepper, Summary, inputCls } from "@/comp
 import { SERVICES, serviceBySlug } from "@/lib/knowledge";
 import { money } from "@/lib/format";
 import { submitQuoteRequest } from "@/lib/public.functions";
+import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
 
 export const Route = createFileRoute("/quote")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   validateSearch: (s: Record<string, unknown>): { service?: string } => (typeof s.service === "string" ? { service: s.service } : {}),
   head: () => ({
     meta: [
@@ -20,6 +22,8 @@ export const Route = createFileRoute("/quote")({
       { name: "description", content: "Tell us about your vehicle and get a ceramic coating, paint correction or PPF quote from DetailingOS in Dallas." },
       { property: "og:title", content: "Request a Quote — DetailingOS" },
       { property: "og:description", content: "Get a detailing recommendation for your vehicle." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: QuotePage,
@@ -37,6 +41,7 @@ const stepSchemas = [
 type Form = { firstName: string; lastName: string; email: string; phone: string; year: string; make: string; model: string; color: string; service: string; date: string; time: string; condition: string; notes: string };
 
 function QuotePage() {
+  const catalog = useServiceCatalog();
   const search = Route.useSearch();
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -81,7 +86,7 @@ function QuotePage() {
     }
   }
 
-  const svc = serviceBySlug(f.service);
+  const svc = catalog.find((s) => s.slug === f.service);
 
   return (
     <SiteLayout>
@@ -137,7 +142,7 @@ function QuotePage() {
                 {step === 2 && (
                   <StepPanel k={2} title="Which service?">
                     <div className="grid gap-2">
-                      {SERVICES.map((s) => (
+                      {catalog.map((s) => (
                         <OptionCard key={s.slug} selected={f.service === s.slug} onClick={() => setF((p) => ({ ...p, service: s.slug }))} title={s.name} meta={`From ${money(s.priceFrom)}`} />
                       ))}
                     </div>

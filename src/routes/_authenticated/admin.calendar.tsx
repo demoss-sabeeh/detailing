@@ -8,8 +8,10 @@ import { useAppointments, type Appointment } from "@/lib/admin-data";
 import { dayKey, fmtTime, statusTone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { adminHead } from "@/lib/workspace";
+import { ErrorState } from "@/components/admin/ui";
 
-export const Route = createFileRoute("/_authenticated/admin/calendar")({ component: CalendarPage });
+export const Route = createFileRoute("/_authenticated/admin/calendar")({ head: () => adminHead("Calendar"), component: CalendarPage });
 
 type View = "day" | "week" | "month";
 const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 86400000);
@@ -48,12 +50,12 @@ function CalendarPage() {
       <PageTitle title="Calendar" subtitle={title} actions={
         <>
           <div className="flex w-full rounded-md border bg-surface p-0.5 sm:w-auto">{(["day", "week", "month"] as View[]).map((v) => <Button variant={view === v ? "navy" : "ghost"} size="sm" aria-pressed={view === v} key={v} onClick={() => setView(v)} className="h-11 flex-1 capitalize sm:h-8 sm:flex-none">{v}</Button>)}</div>
-          <Button variant="outline" size="icon" aria-label="Previous" onClick={() => setAnchor(addDays(anchor, -step))}><ChevronLeft /></Button>
+          <Button variant="outline" size="icon" aria-label="Previous" onClick={() => setAnchor(view === "month" ? new Date(anchor.getFullYear(),anchor.getMonth()-1,1) : addDays(anchor, -step))}><ChevronLeft /></Button>
           <Button variant="outline" size="sm" onClick={() => setAnchor(new Date())}>Today</Button>
-          <Button variant="outline" size="icon" aria-label="Next" onClick={() => setAnchor(addDays(anchor, step))}><ChevronRight /></Button>
+          <Button variant="outline" size="icon" aria-label="Next" onClick={() => setAnchor(view === "month" ? new Date(anchor.getFullYear(),anchor.getMonth()+1,1) : addDays(anchor, step))}><ChevronRight /></Button>
         </>
       } />
-      {a.isLoading ? <RowsSkeleton /> : view === "day" ? (
+      {a.isLoading ? <RowsSkeleton /> : a.isError ? <ErrorState error={a.error} retry={() => a.refetch()} /> : view === "day" ? (
         <div className="rounded-md border bg-surface">
           {[8, 9, 10, 11, 12, 13, 14, 15, 16, 17].map((h) => {
             const list = (byDay[dayKey(anchor)] ?? []).filter((x) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Chicago", hour: "numeric", hour12: false }).format(new Date(x.starts_at))) === h);

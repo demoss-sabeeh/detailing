@@ -6,11 +6,15 @@ import { RowDelete } from "@/components/admin/delete";
 import { deleteLead } from "@/lib/actions";
 import { useLeads, useServices } from "@/lib/admin-data";
 import { fullName, label, LEAD_SOURCES, LEAD_STATUSES, money, timeAgo, vehicleName } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/admin/Pagination";
+import { adminHead } from "@/lib/workspace";
 
 type S = { status?: string; q?: string };
 export const Route = createFileRoute("/_authenticated/admin/leads/")({
   validateSearch: (s: Record<string, unknown>): S => ({ status: typeof s.status === "string" ? s.status : undefined, q: typeof s.q === "string" ? s.q : undefined }),
   component: LeadsPage,
+  head: () => adminHead("Leads & Inquiries"),
 });
 
 function LeadsPage() {
@@ -22,6 +26,7 @@ function LeadsPage() {
   const [service, setService] = useState("");
   const [source, setSource] = useState("");
   const [sort, setSort] = useState<"created" | "value">("created");
+  const [page,setPage] = useState(1);
   const status = search.status ?? "";
 
   const rows = useMemo(() => {
@@ -36,7 +41,7 @@ function LeadsPage() {
 
   return (
     <div className="space-y-5">
-      <PageTitle title="Leads" subtitle={`${rows.length} of ${leads.data?.length ?? 0} leads`} />
+      <PageTitle title="Leads & Inquiries" subtitle={`${rows.length} of ${leads.data?.length ?? 0} inquiries`} actions={<Button asChild variant="outline"><Link to="/admin/quotes">Quotes</Link></Button>} />
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate" aria-hidden />
@@ -51,7 +56,7 @@ function LeadsPage() {
         <select aria-label="Source" className={selectCls} value={source} onChange={(e) => setSource(e.target.value)}>
           <option value="">All sources</option>{LEAD_SOURCES.map((s) => <option key={s} value={s}>{label(s)}</option>)}
         </select>
-        <button onClick={() => setSort(sort === "created" ? "value" : "created")} className={`${selectCls} inline-flex items-center gap-1.5`}><ArrowUpDown className="h-3.5 w-3.5" /> {sort === "created" ? "Newest" : "Highest value"}</button>
+        <Button variant="outline" onClick={() => setSort(sort === "created" ? "value" : "created")}><ArrowUpDown /> {sort === "created" ? "Newest" : "Highest value"}</Button>
       </div>
 
       <div className="overflow-hidden rounded-md border bg-surface">
@@ -62,7 +67,7 @@ function LeadsPage() {
                 <tr>{["Customer", "Vehicle", "Service", "Source", "Status", "Created", "Est. value"].map((h) => <th key={h} className="px-4 py-2.5 font-bold">{h}</th>)}<th className="w-12"><span className="sr-only">Actions</span></th></tr>
               </thead>
               <tbody className="divide-y">
-                {rows.map((l) => (
+                {rows.slice((Math.min(page,Math.max(1,Math.ceil(rows.length/12)))-1)*12,Math.min(page,Math.max(1,Math.ceil(rows.length/12)))*12).map((l) => (
                   <tr key={l.id} className="cursor-pointer hover:bg-secondary/40" onClick={() => navigate({ to: "/admin/leads/$id", params: { id: l.id } })}>
                     <td className="px-4 py-2.5"><Link to="/admin/leads/$id" params={{ id: l.id }} className="font-bold text-navy hover:text-primary">{fullName(l.customer)}</Link></td>
                     <td className="px-4 py-2.5 text-slate">{vehicleName(l.vehicle)}</td>
@@ -77,7 +82,7 @@ function LeadsPage() {
               </tbody>
             </table>
             <ul className="divide-y md:hidden">
-              {rows.map((l) => (
+              {rows.slice((Math.min(page,Math.max(1,Math.ceil(rows.length/12)))-1)*12,Math.min(page,Math.max(1,Math.ceil(rows.length/12)))*12).map((l) => (
                 <li key={l.id} className="flex items-start">
                   <Link to="/admin/leads/$id" params={{ id: l.id }} className="block min-w-0 flex-1 py-3 pl-4">
                     <div className="flex items-center justify-between gap-2"><p className="font-bold text-navy">{fullName(l.customer)}</p><StatusBadge status={l.status} /></div>
@@ -91,6 +96,7 @@ function LeadsPage() {
           </>
         )}
       </div>
+      <Pagination page={page} total={rows.length} onChange={setPage} />
     </div>
   );
 }

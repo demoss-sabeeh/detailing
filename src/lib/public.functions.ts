@@ -2,7 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { bookingDayBounds, businessLocalToIso, isSlotWithinBusinessHours, validateBookingDate, validateBookingSlot } from "./booking-validation";
 import { findOrCreateCustomer, findOrCreateVehicle, runInstantResponse, serviceBySlug } from "./intake.server";
-import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug } from "./knowledge";
+import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug, type ServiceInfo } from "./knowledge";
+
+export const getServiceCatalog = createServerFn({ method: "GET" }).handler(async (): Promise<ServiceInfo[]> => {
+  const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await db.from("services").select("slug,name,short_description,description,ideal_customer,includes,duration_hours,price_from,price_to").eq("active",true).order("sort");
+  if (error) throw new Error("Could not load the service menu.");
+  return (data ?? []).map((s) => ({ slug:s.slug,name:s.name,short:s.short_description,description:s.description,ideal:s.ideal_customer,includes:s.includes,durationHours:Number(s.duration_hours),priceFrom:s.price_from,priceTo:s.price_to ?? s.price_from }));
+});
 
 const contact = z.object({
   firstName: z.string().trim().min(1).max(60),
@@ -148,7 +155,7 @@ export const createBooking = createServerFn({ method: "POST" })
     if (overlaps(ranges, proposedStart, proposedStart + cart.durationHours * 3_600_000)) throw new Error("That time was just booked. Please choose another slot.");
     const customerId = await findOrCreateCustomer(db, data.contact);
     const vehicleId = await findOrCreateVehicle(db, customerId, data.vehicle);
-    const notes = [`Requested: ${cart.label}`, data.notes?.trim()].filter(Boolean).join("\n");
+    const notes = [`Requested: ${cart.label}`, `Booking total: $${cart.price}`, data.notes?.trim()].filter(Boolean).join("\n");
     const { data: lead, error: leadError } = await db
       .from("leads")
       .insert({ customer_id: customerId, vehicle_id: vehicleId, service_id: cart.primary.id, source: "website", status: "new", estimated_value: cart.price, preferred_date: data.date, preferred_time: data.time, notes })
