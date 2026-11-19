@@ -35,10 +35,10 @@ export function exportCsv(filename: string, headers: string[], rows: (string | n
 }
 
 export const adminHead = (page: string) => ({ meta: [
-  { title: `${page} — DetailingOS` },
-  { name: "description", content: `Manage ${page.toLowerCase()} in the DetailingOS business workspace.` },
-  { property: "og:title", content: `${page} — DetailingOS` },
-  { property: "og:description", content: `DetailingOS ${page.toLowerCase()} workspace.` },
+  { title: `${page} — KVS Auto Detailing` },
+  { name: "description", content: `Manage ${page.toLowerCase()} in the KVS Auto Detailing business workspace.` },
+  { property: "og:title", content: `${page} — KVS Auto Detailing` },
+  { property: "og:description", content: `KVS Auto Detailing ${page.toLowerCase()} workspace.` },
   { property: "og:type", content: "website" },
   { name: "twitter:card", content: "summary" },
   { name: "robots", content: "noindex" },

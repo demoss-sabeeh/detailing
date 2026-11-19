@@ -16,10 +16,10 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   head: () => ({
     meta: [
-      { title: "DetailingOS — Premium Car Detailing in Dallas, TX" },
-      { name: "description", content: "Paint correction, ceramic coating, PPF and full detailing in Dallas. Request an itemized quote or book online." },
-      { property: "og:title", content: "DetailingOS — Exceptional Care for Every Finish" },
-      { property: "og:description", content: "Paint correction, ceramic coating, PPF and full detailing in Dallas, Texas." },
+      { title: "KVS Auto Detailing — Premium Car Detailing in Phoenix, AZ" },
+      { name: "description", content: "Paint correction, ceramic coating, PPF and full detailing in Phoenix. Request an itemized quote or book online." },
+      { property: "og:title", content: "KVS Auto Detailing — Exceptional Care for Every Finish" },
+      { property: "og:description", content: "Paint correction, ceramic coating, PPF and full detailing in Phoenix, Arizona." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:image", content: heroPoster.url },
@@ -156,7 +156,7 @@ function Home() {
             </div>
           </div>
           <div className="lg:col-span-7 lg:pl-6">
-            <p className="eyebrow text-primary">Why DetailingOS</p>
+            <p className="eyebrow text-primary">Why KVS Auto Detailing</p>
             <h2 className="mt-3 font-display text-4xl text-navy md:text-5xl">The details that matter, handled properly.</h2>
             <dl className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
               {[
@@ -267,7 +267,7 @@ function Home() {
           <p className="eyebrow text-primary">About the studio</p>
           <h2 className="mt-3 font-display text-4xl text-navy md:text-5xl">A careful process, start to finish.</h2>
           <p className="mt-6 max-w-lg leading-relaxed text-slate">
-            DetailingOS is a detailing studio in {BUSINESS.city}, serving {BUSINESS.serviceArea}. Each vehicle is inspected before work begins, prepared properly, and checked again before it goes home.
+            KVS Auto Detailing is a detailing studio in {BUSINESS.city}, serving {BUSINESS.serviceArea}. Each vehicle is inspected before work begins, prepared properly, and checked again before it goes home.
           </p>
           <Button asChild variant="cta-outline" className="mt-8"><Link to="/about">More about us <ArrowRight /></Link></Button>
         </div>

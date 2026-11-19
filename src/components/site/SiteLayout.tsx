@@ -1,3 +1,4 @@
+import { DetailingMark } from "@/components/admin/DetailingMark";
 import { Link } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu } from "lucide-react";
@@ -23,7 +24,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container-site flex h-16 items-center justify-between gap-6">
-          <Link to="/" className="font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl" aria-label="DetailingOS home">DetailingOS</Link>
+          <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl" aria-label="KVS Auto Detailing home"><DetailingMark className="h-10" />KVS Auto Detailing</Link>
           <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
             {NAV.map((n) => (
               <Link key={n.to} to={n.to} activeOptions={{ exact: n.to === "/" }} className="text-[13px] font-semibold text-slate transition-colors hover:text-navy" activeProps={{ className: "text-navy" }}>
@@ -58,7 +59,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
       <footer className="bg-navy text-navy-foreground">
         <div className="container-site grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-12">
           <div className="sm:col-span-2 lg:col-span-4">
-            <p className="font-display text-2xl font-semibold tracking-tight">DetailingOS</p>
+            <p className="flex items-center gap-3 font-display text-2xl font-semibold tracking-tight"><DetailingMark className="h-12" />KVS Auto Detailing</p>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Button asChild variant="cta" size="sm"><Link to="/quote">Get a quote</Link></Button>

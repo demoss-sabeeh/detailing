@@ -6,9 +6,9 @@ import { BUSINESS } from "@/lib/knowledge";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact DetailingOS — Dallas, TX" },
-      { name: "description", content: "Email our Dallas studio, see our hours, or request a quote online." },
-      { property: "og:title", content: "Contact — DetailingOS" },
+      { title: "Contact KVS Auto Detailing — Phoenix, AZ" },
+      { name: "description", content: "Email our Phoenix studio, see our hours, or request a quote online." },
+      { property: "og:title", content: "Contact — KVS Auto Detailing" },
       { property: "og:description", content: "Studio hours and email contact." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

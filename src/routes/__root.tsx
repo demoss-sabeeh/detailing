@@ -65,8 +65,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DetailingOS — Auto Detailing Business OS Demo" },
-      { name: "description", content: "DetailingOS is a demonstration of an auto-detailing business management platform by Operant Scale, shown with a fictional sample detailing studio." },
+      { title: "KVS Auto Detailing — Auto Detailing Business OS Demo" },
+      { name: "description", content: "KVS Auto Detailing is a demonstration of an auto-detailing business management platform by Operant Scale, shown with a fictional sample detailing studio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

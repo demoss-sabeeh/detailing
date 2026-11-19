@@ -5,10 +5,10 @@ import { GALLERY } from "@/lib/gallery";
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
-      { title: "Gallery — Ceramic Coating & PPF Work | DetailingOS" },
-      { name: "description", content: "Selected ceramic coating, paint correction and paint protection film work from the DetailingOS studio in Dallas." },
-      { property: "og:title", content: "Gallery — DetailingOS" },
-      { property: "og:description", content: "Selected detailing work from our Dallas studio." },
+      { title: "Gallery — Ceramic Coating & PPF Work | KVS Auto Detailing" },
+      { name: "description", content: "Selected ceramic coating, paint correction and paint protection film work from the KVS Auto Detailing studio in Phoenix." },
+      { property: "og:title", content: "Gallery — KVS Auto Detailing" },
+      { property: "og:description", content: "Selected detailing work from our Phoenix studio." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

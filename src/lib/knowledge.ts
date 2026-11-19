@@ -2,17 +2,17 @@
 // The assistant may only answer from this data.
 
 export const BUSINESS = {
-  name: "DetailingOS",
-  city: "Dallas, Texas",
-  address: "2211 Commerce St, Dallas, TX 75201",
-  phone: "(214) 555-0199",
-  email: "studio@detailingos.example",
+  name: "KVS Auto Detailing",
+  city: "Phoenix, Arizona",
+  address: "2400 E Camelback Rd, Phoenix, AZ 85016",
+  phone: "(602) 555-0199",
+  email: "studio@kvsautodetailing.example",
   hours: [
     { day: "Monday – Friday", time: "8:00 AM – 6:00 PM" },
     { day: "Saturday", time: "9:00 AM – 4:00 PM" },
     { day: "Sunday", time: "Closed" },
   ],
-  serviceArea: "Dallas, Plano, Frisco, Highland Park, Irving and Southlake",
+  serviceArea: "Phoenix, Scottsdale, Tempe, Chandler, Mesa and Paradise Valley",
 };
 
 export type ServiceInfo = {
@@ -48,7 +48,7 @@ export const FAQ = [
 
 export const POLICIES = [
   "Appointments are available Monday–Saturday during business hours.",
-  "Studio services (coating, correction, PPF) are performed at our Dallas studio.",
+  "Studio services (coating, correction, PPF) are performed at our Phoenix studio.",
   "Final pricing is confirmed after an in-person paint inspection.",
   "Please provide 24 hours' notice to reschedule or cancel.",
 ];

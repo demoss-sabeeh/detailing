@@ -9,10 +9,10 @@ export const Route = createFileRoute("/services/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
   head: () => ({
     meta: [
-      { title: "Detailing Services & Pricing — DetailingOS Dallas" },
-      { name: "description", content: "Full detail, ceramic coating, paint correction, PPF, interior and fleet detailing in Dallas, with starting prices." },
-      { property: "og:title", content: "Detailing Services — DetailingOS" },
-      { property: "og:description", content: "Ceramic coating, paint correction, PPF and more in Dallas, TX." },
+      { title: "Detailing Services & Pricing — KVS Auto Detailing Phoenix" },
+      { name: "description", content: "Full detail, ceramic coating, paint correction, PPF, interior and fleet detailing in Phoenix, with starting prices." },
+      { property: "og:title", content: "Detailing Services — KVS Auto Detailing" },
+      { property: "og:description", content: "Ceramic coating, paint correction, PPF and more in Phoenix, AZ." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
