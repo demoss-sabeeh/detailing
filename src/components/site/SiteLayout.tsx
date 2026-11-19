@@ -1,12 +1,12 @@
 import { DetailingMark } from "@/components/admin/DetailingMark";
-import { Link } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
-import { Menu } from "lucide-react";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BUSINESS, SERVICES } from "@/lib/knowledge";
 import { BRAND } from "@/lib/brand";
-import { AssistantWidget } from "./AssistantWidget";
+import { Reveal, SplitHeadline } from "./Motion";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -17,98 +17,118 @@ const NAV = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-
 export function SiteLayout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const path = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 24);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  useEffect(() => { setOpen(false); }, [path]);
+  useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; }, [open]);
+  const darkTop = ["/", "/services", "/gallery", "/about", "/faq", "/contact"].includes(path);
+  const solid = scrolled || open || !darkTop;
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-        <div className="container-site flex h-16 items-center justify-between gap-6">
-          <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight text-navy sm:text-2xl" aria-label="KVS Auto Detailing home"><DetailingMark className="h-10" />KVS Auto Detailing</Link>
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
+      <header className={`fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,color] duration-500 ${solid ? "border-b border-navy-foreground/10 bg-navy/95 backdrop-blur" : "border-b border-transparent bg-transparent"} text-navy-foreground`}>
+        <div className="container-site flex h-[72px] items-center justify-between gap-6">
+          <Link to="/" className="flex shrink-0 items-center gap-3" aria-label="KVS Auto Detailing home">
+            <DetailingMark className="h-11" />
+            <span className="hidden font-display text-xl leading-none sm:block">KVS Auto Detailing</span>
+          </Link>
+          <nav className="hidden items-center gap-8 lg:flex" aria-label="Main">
             {NAV.map((n) => (
-              <Link key={n.to} to={n.to} activeOptions={{ exact: n.to === "/" }} className="text-[13px] font-semibold text-slate transition-colors hover:text-navy" activeProps={{ className: "text-navy" }}>
+              <Link key={n.to} to={n.to} activeOptions={{ exact: n.to === "/" }} className="link-underline pb-1 text-[13px] font-medium tracking-wide text-navy-foreground/75 transition-colors hover:text-navy-foreground data-[status=active]:text-navy-foreground">
                 {n.label}
               </Link>
             ))}
           </nav>
           <div className="hidden items-center gap-2 lg:flex">
-            <Button asChild variant="cta-outline" size="sm" className="h-9"><Link to="/book">Book appointment</Link></Button>
-            <Button asChild variant="cta" size="sm" className="h-9"><Link to="/quote">Get a quote</Link></Button>
+            <Link to="/quote" className="h-10 px-4 text-[13px] font-semibold leading-10 text-navy-foreground/85 transition-colors hover:text-navy-foreground">Get a quote</Link>
+            <Button asChild variant="cta" size="sm" className="h-10 rounded-sm px-5"><Link to="/book">Book appointment</Link></Button>
           </div>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 shrink-0 lg:hidden" aria-label="Open menu"><Menu /></Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto bg-background pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <nav className="mt-8 flex flex-col" aria-label="Mobile">
-                {NAV.map((n) => (
-                  <Link key={n.to} to={n.to} onClick={() => setOpen(false)} className="border-b py-4 font-display text-3xl text-navy">{n.label}</Link>
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={open ? "Close menu" : "Open menu"} className="grid h-11 w-11 place-items-center lg:hidden">
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+        <AnimatePresence>
+          {open && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "calc(100dvh - 72px)" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.45, ease: [0.2, 0.7, 0.2, 1] }} className="overflow-y-auto bg-navy lg:hidden">
+              <nav className="container-site flex flex-col pt-6" aria-label="Mobile">
+                {NAV.map((n, i) => (
+                  <motion.div key={n.to} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 + i * 0.05 }}>
+                    <Link to={n.to} className="flex items-center justify-between border-b border-navy-foreground/10 py-4 font-display text-4xl">
+                      {n.label}<ArrowUpRight className="h-5 w-5 text-sky" />
+                    </Link>
+                  </motion.div>
                 ))}
+                <div className="mt-8 grid gap-3 pb-[max(2rem,env(safe-area-inset-bottom))]">
+                  <Button asChild variant="cta" size="lg" className="rounded-sm"><Link to="/book">Book appointment</Link></Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-sm border-navy-foreground/30 bg-transparent text-navy-foreground hover:bg-navy-deep hover:text-navy-foreground"><Link to="/quote">Get a quote</Link></Button>
+                </div>
               </nav>
-              <div className="mt-8 grid gap-2">
-                <Button asChild variant="cta" size="lg"><Link to="/quote" onClick={() => setOpen(false)}>Get a quote</Link></Button>
-                <Button asChild variant="cta-outline" size="lg"><Link to="/book" onClick={() => setOpen(false)}>Book appointment</Link></Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
-      <main className="flex-1">{children}</main>
+      <main className={`flex-1 ${darkTop ? "" : "pt-[72px]"}`}>{children}</main>
       <footer className="bg-navy text-navy-foreground">
-        <div className="container-site grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="sm:col-span-2 lg:col-span-4">
-            <p className="flex items-center gap-3 font-display text-2xl font-semibold tracking-tight"><DetailingMark className="h-12" />KVS Auto Detailing</p>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <Button asChild variant="cta" size="sm"><Link to="/quote">Get a quote</Link></Button>
-              <Link to="/admin" className="inline-flex h-8 items-center rounded-md border border-navy-muted/30 px-3 text-xs font-semibold text-navy-muted transition-colors hover:text-navy-foreground">Business login</Link>
-            </div>
-          </div>
-          <div className="lg:col-span-2">
-            <p className="eyebrow text-navy-muted">Explore</p>
-            <ul className="mt-4 space-y-2 text-sm">
-              {[...NAV.slice(1), { to: "/book", label: "Book appointment" } as const].map((n) => (
-                <li key={n.to}><Link to={n.to} className="text-navy-foreground/85 transition-colors hover:text-navy-foreground">{n.label}</Link></li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-3">
-            <p className="eyebrow text-navy-muted">Services</p>
-            <ul className="mt-4 space-y-2 text-sm">
-              {SERVICES.map((s) => (
-                <li key={s.slug}><Link to="/services/$slug" params={{ slug: s.slug }} className="text-navy-foreground/85 transition-colors hover:text-navy-foreground">{s.name}</Link></li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-3">
-            <p className="eyebrow text-navy-muted">Contact</p>
-            <address className="mt-4 space-y-1 text-sm not-italic text-navy-foreground/85">
-              <p className="break-all"><a href={`mailto:${BUSINESS.email}`} className="hover:text-navy-foreground">{BUSINESS.email}</a></p>
-              <div className="pt-3">{BUSINESS.hours.map((h) => <p key={h.day} className="text-navy-muted">{h.day}: {h.time}</p>)}</div>
-            </address>
-          </div>
+        <div className="container-site border-b border-navy-foreground/10 py-16 md:py-24">
+          <Reveal className="grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <p className="font-display text-display max-w-3xl">Precision in every detail.</p>
+            <Link to="/book" className="group inline-flex items-center gap-3 text-sm font-semibold">
+              <span className="link-underline pb-1">Book your appointment</span>
+              <span className="grid h-12 w-12 place-items-center rounded-full border border-navy-foreground/25 transition-colors group-hover:border-primary group-hover:bg-primary"><ArrowUpRight className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" /></span>
+            </Link>
+          </Reveal>
         </div>
-        <div className="border-t border-sidebar-border">
-          <div className="container-site flex flex-col gap-2 py-5 text-[11px] text-navy-muted sm:flex-row sm:justify-between">
-            <span>{BRAND.demoBusiness.disclaimer}</span>
+        <div className="container-site grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="sm:col-span-2 lg:col-span-4">
+            <div className="flex items-center gap-3"><DetailingMark className="h-14" /><span className="font-display text-2xl">KVS Auto Detailing</span></div>
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-navy-muted">Hand detailing, paint correction, ceramic coating and paint protection film in {BUSINESS.city}.</p>
+            <p className="mt-6 text-sm text-navy-muted">Serving {["Phoenix", "Scottsdale", "Tempe", "Chandler", "Mesa", "Paradise Valley"].join(" · ")}</p>
+          </div>
+          <FooterCol title="Explore" className="lg:col-span-2" items={[...NAV.slice(1), { to: "/book", label: "Book appointment" }, { to: "/quote", label: "Get a quote" }].map((n) => <Link to={n.to} className="link-underline pb-0.5">{n.label}</Link>)} />
+          <FooterCol title="Services" className="lg:col-span-3" items={SERVICES.map((s) => <Link to="/services/$slug" params={{ slug: s.slug }} className="link-underline pb-0.5">{s.name}</Link>)} />
+          <FooterCol title="Studio" className="lg:col-span-3" items={[
+            <a href={`mailto:${BUSINESS.email}`} className="link-underline break-all pb-0.5">{BUSINESS.email}</a>,
+            ...BUSINESS.hours.map((h) => <span className="text-navy-muted">{h.day}: {h.time}</span>),
+            <Link to="/admin" className="text-navy-muted transition-colors hover:text-navy-foreground">Business login</Link>,
+          ]} />
+        </div>
+        <div className="border-t border-navy-foreground/10">
+          <div className="container-site flex flex-col gap-2 py-6 text-[11px] text-navy-muted sm:flex-row sm:justify-between">
+            <span>© {new Date().getFullYear()} {BUSINESS.name}. {BRAND.demoBusiness.disclaimer}</span>
             <span>{BRAND.footerAttribution}</span>
           </div>
         </div>
       </footer>
-      <AssistantWidget />
+    </div>
+  );
+}
+
+function FooterCol({ title, items, className = "" }: { title: string; items: ReactNode[]; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="eyebrow text-sky">{title}</p>
+      <ul className="mt-5 space-y-2.5 text-sm text-navy-foreground/85">{items.map((it, i) => <li key={i}>{it}</li>)}</ul>
     </div>
   );
 }
 
 export function PageHeader({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children?: ReactNode }) {
   return (
-    <section className="border-b">
-      <div className="container-site py-16 md:py-24">
-        <p className="eyebrow animate-rise text-primary">{eyebrow}</p>
-        <h1 className="mt-4 max-w-3xl animate-rise font-display text-5xl leading-[1.02] text-navy md:text-7xl">{title}</h1>
-        {children && <div className="mt-6 max-w-2xl animate-rise text-lg text-slate [animation-delay:120ms]">{children}</div>}
+    <section className="relative overflow-hidden bg-navy text-navy-foreground">
+      <div className="container-site pb-16 pt-36 md:pb-24 md:pt-48">
+        <Reveal><p className="eyebrow flex items-center gap-3 text-sky"><span className="h-px w-8 bg-sky" />{eyebrow}</p></Reveal>
+        {typeof title === "string"
+          ? <SplitHeadline as="h1" text={title} className="font-display text-display mt-6 max-w-4xl" delay={0.1} />
+          : <h1 className="font-display text-display mt-6 max-w-4xl">{title}</h1>}
+        {children && <Reveal delay={0.3} className="mt-8 max-w-2xl text-lg leading-relaxed text-navy-muted">{children}</Reveal>}
       </div>
     </section>
   );
