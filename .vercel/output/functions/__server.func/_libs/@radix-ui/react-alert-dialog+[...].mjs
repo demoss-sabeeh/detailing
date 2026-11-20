@@ -2,7 +2,7 @@ import { i as __toESM } from "../../_runtime.mjs";
 import { l as require_react_dom, u as require_react } from "../@floating-ui/react-dom+[...].mjs";
 import { _ as useComposedRefs, c as Presence, d as useControllableState, f as useId, g as createSlot, l as Primitive, m as createContextScope, p as useLayoutEffect2, u as dispatchDiscreteCustomEvent, v as require_jsx_runtime } from "./react-accordion+[...].mjs";
 import { t as composeEventHandlers } from "../radix-ui__primitive.mjs";
-import { __assign, __rest, __spreadArray } from "tslib";
+import { __assign, __rest, __spreadArray } from "../tslib.mjs";
 //#region node_modules/@radix-ui/react-use-callback-ref/dist/index.mjs
 var import_react = /* @__PURE__ */ __toESM(require_react(), 1);
 var __defProp$6 = Object.defineProperty;
