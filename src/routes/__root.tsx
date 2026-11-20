@@ -65,8 +65,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KVS Auto Detailing — Auto Detailing Business OS Demo" },
-      { name: "description", content: "KVS Auto Detailing is a demonstration of an auto-detailing business management platform by Operant Scale, shown with a fictional sample detailing studio." },
+      { title: "KVS Auto Detailing | Precision Automotive Care" },
+      { name: "description", content: "Precision automotive detailing, paint correction, ceramic coating and paint protection in Phoenix, Arizona." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -104,6 +104,8 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
+    if (!import.meta.env["VITE_SUPABASE_URL"] || !import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"]) return;
+
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();

@@ -11,6 +11,7 @@ import { RowDelete, DeleteButton } from "@/components/admin/delete";
 import { setQuoteStatus, deleteQuote } from "@/lib/actions";
 import { fmtDate, fullName, label, money, QUOTE_STATUSES, vehicleName } from "@/lib/format";
 import { BUSINESS } from "@/lib/knowledge";
+import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { adminHead } from "@/lib/workspace";
 
@@ -94,7 +95,7 @@ function QuotePreview({ q, onDeleted }: { q: Quote; onDeleted: () => void }) {
       </div>
       <article className="rounded-md border bg-surface p-4 sm:p-6">
         <header className="grid min-w-0 gap-3 border-b pb-4 sm:grid-cols-[minmax(0,1fr)_auto]">
-          <div className="min-w-0"><p className="text-sm font-extrabold tracking-[0.18em] text-navy">DETAILINGOS</p><p className="text-xs text-slate">{BUSINESS.address}</p></div>
+          <div className="min-w-0"><p className="text-sm font-extrabold tracking-[0.18em] text-navy">{BRAND.productName.toUpperCase()}</p><p className="text-xs text-slate">{BUSINESS.address}</p></div>
           <div className="text-right"><p className="tabular font-bold text-navy">{q.number}</p><StatusBadge status={q.status} /></div>
         </header>
         <div className="grid min-w-0 gap-4 py-4 text-sm sm:grid-cols-2">

@@ -5,6 +5,12 @@ import { findOrCreateCustomer, findOrCreateVehicle, runInstantResponse, serviceB
 import { knowledgeAsText, SERVICES, BUSINESS, TIME_SLOTS, ADDONS, addonBySlug, type ServiceInfo } from "./knowledge";
 
 export const getServiceCatalog = createServerFn({ method: "GET" }).handler(async (): Promise<ServiceInfo[]> => {
+  const serviceRoleKey = process.env["SUPABASE_SERVICE_ROLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"];
+  if (!process.env["SUPABASE_URL"] || !serviceRoleKey) {
+    console.warn("[public] Supabase is not configured; serving the sample KVS service catalog.");
+    return SERVICES;
+  }
+
   const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
   const { data, error } = await db.from("services").select("slug,name,short_description,description,ideal_customer,includes,duration_hours,price_from,price_to").eq("active",true).order("sort");
   if (error) throw new Error("Could not load the service menu.");

@@ -7,11 +7,11 @@
  */
 export const BRAND = {
   /** Product / platform identity shown in the dashboard, auth screen and metadata. */
-  productName: "DetailingOS",
+  productName: "KVS Auto Detailing",
   /** Agency providing the solution. */
   agencyName: "Operant Scale",
   /** Subtle footer attribution. */
-  footerAttribution: "Demo powered by Operant Scale",
+  footerAttribution: "KVS Auto Detailing",
   /** Show the demo-mode indicator in the dashboard header. */
   demoMode: true,
   /** The fictional business whose sample data fills the demo. */
