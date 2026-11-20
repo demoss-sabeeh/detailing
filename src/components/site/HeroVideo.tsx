@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import v1600 from "@/assets/detailing-hero-1600.mp4.asset.json";
 import v960 from "@/assets/detailing-hero-960.mp4.asset.json";
-import poster from "@/assets/detailing-hero-poster.jpg.asset.json";
+import poster from "@/assets/hero-m4.jpg";
 
 /** Muted, looping cinematic hero clip with poster fallback and reduced-motion support. */
 export function HeroVideo({ className = "" }: { className?: string }) {
@@ -25,12 +25,12 @@ export function HeroVideo({ className = "" }: { className?: string }) {
 
   return (
     <div className={`relative overflow-hidden bg-navy ${className}`}>
-      <img src={poster.url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[60%_50%]" />
+      <img src={poster} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[60%_50%]" />
       {src && !failed && (
         <video
           ref={ref}
           src={src}
-          poster={poster.url}
+          poster={poster}
           autoPlay
           muted
           loop

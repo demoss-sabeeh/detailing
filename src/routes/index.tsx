@@ -12,7 +12,7 @@ import { SERVICES, BUSINESS } from "@/lib/knowledge";
 import { GALLERY } from "@/lib/gallery";
 import { money } from "@/lib/format";
 import { serviceCatalogOptions, useServiceCatalog } from "@/lib/catalog";
-import heroPoster from "@/assets/detailing-hero-poster.jpg.asset.json";
+import heroPoster from "@/assets/hero-m4.jpg";
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(serviceCatalogOptions),
@@ -24,8 +24,9 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Paint correction, ceramic coating, PPF and full detailing in Phoenix, Arizona." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:image", content: heroPoster.url },
-      { name: "twitter:image", content: heroPoster.url },
+      { property: "og:image", content: heroPoster },
+      { name: "twitter:image", content: heroPoster },
+      { property: "og:logo", content: "/kvs_auto_detailing_logo_transparent.png" },
     ],
     scripts: [
       {

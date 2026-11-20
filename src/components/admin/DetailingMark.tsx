@@ -1,6 +1,5 @@
 import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/kvs-logo.png.asset.json";
 
 /** Business logo (circular badge, works on light and dark surfaces). */
 export function DetailingMark({
@@ -13,7 +12,7 @@ export function DetailingMark({
 }) {
   return (
     <img
-      src={logo.url}
+      src="/kvs_auto_detailing_logo_transparent.png"
       alt={BRAND.demoBusiness.name}
       className={cn("aspect-square w-auto shrink-0 object-contain", compact ? "h-8" : "h-11", className)}
     />
