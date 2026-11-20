@@ -53,7 +53,7 @@ const HOME_FAQ = [
   { q: "How long does a typical appointment take?", a: `It depends on the service: about ${SERVICES[5].durationHours} hours for a Maintenance Detail, ${SERVICES[0].durationHours} for a Full Detail, ${SERVICES[1].durationHours} for Ceramic Coating and up to ${SERVICES[3].durationHours} for Paint Protection Film. Your quote confirms the exact time.` },
   { q: "What's the difference between ceramic coating and paint correction?", a: "Paint correction is machine polishing that removes defects like swirls and light scratches. Ceramic coating is a protective layer applied on top. Because a coating locks in whatever is underneath, most vehicles benefit from some correction first." },
   { q: "How do I request a quote?", a: "Use the Get a Quote form. Tell us about your vehicle, its condition and the services you're interested in, and you'll receive an itemized quote." },
-  { q: "How can I book an appointment?", a: "Choose Book an Appointment, pick your services and add-ons, then select an available date and time. You'll receive a confirmation once it's scheduled." },
+  { q: "How can I book an appointment?", a: "Choose Book an Appointment, pick your services and add-ons, then submit your preferred date and time. The studio will review your request and confirm availability with you." },
   { q: "How should I prepare my vehicle?", a: "Remove personal items from the cabin and trunk. There's no need to wash the vehicle beforehand." },
   { q: "How can I contact the studio?", a: `Email ${BUSINESS.email} or send a quote request — we reply with an itemized recommendation.` },
 ];
@@ -62,13 +62,13 @@ const WHY = [
   [Gauge, "Paint measured first", "Paint depth is checked before any correction so we remove defects, not clear coat."],
   [ShieldCheck, "Surface-specific care", "Paint, leather, trim and glass each get the products and process they need."],
   [Sparkles, "Recommendations for your car", "We suggest the package that fits its condition and how you drive it."],
-  [MessageSquareText, "Clear communication", "Itemized quotes, confirmations and reminders before your visit."],
+  [MessageSquareText, "Clear communication", "Itemized quote requests and clear follow-up before your visit."],
 ] as const;
 
 const STEPS = [
   ["Request a Quote", "Tell us about your vehicle and the result you want."],
   ["Get a Recommendation", "We confirm the right package and send an itemized quote."],
-  ["Choose Your Time", "Pick an available slot online. Reminders are sent before your visit."],
+  ["Choose Your Time", "Submit a preferred time online. The studio will confirm availability with you."],
   ["Drive Away Refreshed", "We inspect the finished work with you and suggest your next maintenance."],
 ];
 
